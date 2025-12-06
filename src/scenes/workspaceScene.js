@@ -567,6 +567,7 @@ export default class WorkspaceScene extends Phaser.Scene {
         const snapped = this.snapToGrid(component.x, component.y);
         component.x = snapped.x;
         component.y = snapped.y;
+        this.infoWindow.setVisible(false);
 
         const comp = component.getData('logicComponent');
         if (comp) {
