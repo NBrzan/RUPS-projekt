@@ -69,6 +69,8 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.infoWindow.add([infoBox, infoText]);
     this.infoText = infoText;
 
+    this.input.mouse.disableContextMenu();
+
     this.challenges = [
       {
         prompt: 'Sestavi preprosti električni krog z baterijo in svetilko.',
@@ -617,11 +619,25 @@ export default class WorkspaceScene extends Phaser.Scene {
  
     component.on('pointerup', (pointer) => {
 
-      if (!component.getData('isInPanel') && (pointer.getDuration() < 200)) {
+    if (!component.getData('isInPanel') && (pointer.getDuration() < 200)) {
+      if (pointer.button == 2) {
+        let actualComponenet = component.getData("logicComponent");
+        if (actualComponenet.type == "switch") {
+          actualComponenet.toggle();
+          const visualImage = component.list.find(child => child.type === 'Image');
 
+          if (visualImage) {
+            const newTexture = actualComponenet.is_on ? 'stikalo-on' : 'stikalo-off';
+            component.setData('type', newTexture);
+            visualImage.setTexture(newTexture);
+          }
+          //component.setData("logicComponent", actualComponenet);
+        }
+        //console.log("SWITCH is on: ", component.getData("logicComponent").is_on);
+      } else if (pointer.button == 0) {
         const currentRotation = component.getData('rotation');
         const newRotation = (currentRotation + 90) % 360;
-        //console.log(" Rotation new: " , newRotation)
+        
         component.setData('rotation', newRotation);
         component.setData('isRotated', !component.getData('isRotated'));
 
@@ -632,6 +648,7 @@ export default class WorkspaceScene extends Phaser.Scene {
           ease: 'Cubic.easeOut',
         });
       }
+    }
     });
 
     // hover efekt
