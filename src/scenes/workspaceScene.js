@@ -623,12 +623,13 @@ export default class WorkspaceScene extends Phaser.Scene {
 
         const currentRotation = component.getData('rotation');
         const newRotation = (currentRotation + 90) % 360;
+        //console.log(" Rotation new: " , newRotation)
         component.setData('rotation', newRotation);
         component.setData('isRotated', !component.getData('isRotated'));
 
         this.tweens.add({
           targets: component,
-          angle: newRotation,
+          angle: "+=90",
           duration: 150,
           ease: 'Cubic.easeOut',
         });
