@@ -618,7 +618,12 @@ export default class WorkspaceScene extends Phaser.Scene {
     });
 
     component.on('pointerdown', () => {
-      if (!component.getData('isInPanel')) {
+      component.setData("dragStart", this.time.now);     
+    }); 
+    component.on('pointerup', () => {
+
+      if (!component.getData('isInPanel') && (this.time.now - component.getData('dragStart') < 200)) {
+
         const currentRotation = component.getData('rotation');
         const newRotation = (currentRotation + 90) % 360;
         component.setData('rotation', newRotation);
