@@ -28,6 +28,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.load.image('žica', 'src/components/wire.png');
     this.load.image('ampermeter', 'src/components/ammeter.png');
     this.load.image('voltmeter', 'src/components/voltmeter.png');
+    this.load.image('smetnjak', 'src/components/trash.png');
   }
 
   create() {
@@ -194,6 +195,25 @@ export default class WorkspaceScene extends Phaser.Scene {
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
+    const trashCanX = 75;
+    const trashCanY = 750;
+    let trashCan = this.add.image(trashCanX, trashCanY, 'smetnjak')
+          .setDisplaySize(60, 60)
+          .setInteractive();
+
+    trashCan.on('pointerover', () => {
+        this.infoText.setText("Tukaj vrži komponente, ki jih ne želiš");
+        
+        this.infoWindow.x = trashCanX + 120;
+        this.infoWindow.y = trashCanY;
+        this.infoWindow.setVisible(true);
+    });
+    
+    trashCan.on('pointerout', () => {
+        this.infoWindow.setVisible(false);
+    });
+    
+    
     // komponente v stranski vrstici
     this.createComponent(panelWidth / 2, 100, 'baterija', 0xffcc00);
     this.createComponent(panelWidth / 2, 180, 'upor', 0xff6600);
@@ -282,30 +302,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     return details[type] || 'Komponenta';
   }
 
-  createGrid() {
-    const { width, height } = this.cameras.main;
-    const gridGraphics = this.add.graphics();
-    gridGraphics.lineStyle(2, 0x8b7355, 0.4);
-
-    const gridSize = 40;
-    const startX = 200;
-
-    // vertikalne črte
-    for (let x = startX; x < width; x += gridSize) {
-      gridGraphics.beginPath();
-      gridGraphics.moveTo(x, 0);
-      gridGraphics.lineTo(x, height);
-      gridGraphics.strokePath();
-    }
-
-    // horizontalne črte
-    for (let y = 0; y < height; y += gridSize) {
-      gridGraphics.beginPath();
-      gridGraphics.moveTo(startX, y);
-      gridGraphics.lineTo(width, y);
-      gridGraphics.strokePath();
-    }
-  }
+  
 
   snapToGrid(x, y) {
     const gridSize = this.gridSize;
