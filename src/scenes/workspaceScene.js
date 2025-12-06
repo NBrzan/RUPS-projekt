@@ -136,29 +136,37 @@ export default class WorkspaceScene extends Phaser.Scene {
     const cornerRadius = 10;
 
     const makeButton = (x, y, label, onClick) => {
+      const button = this.add.container(x, y);
+
       const bg = this.add.graphics();
       bg.fillStyle(0x3399ff, 1);
-      bg.fillRoundedRect(x - buttonWidth / 2, y - buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
+      bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
 
-      const text = this.add.text(x, y, label, {
+      const text = this.add.text(0, 0, label, {
         fontFamily: 'Arial',
         fontSize: '20px',
         color: '#ffffff'
-      }).setOrigin(0.5)
+      }).setOrigin(0.5);
+
+      button.add([bg, text]);
+
+      // make the whole button area interactive
+      button
+        .setSize(buttonWidth, buttonHeight)
         .setInteractive({ useHandCursor: true })
         .on('pointerover', () => {
           bg.clear();
           bg.fillStyle(0x0f5cad, 1);
-          bg.fillRoundedRect(x - buttonWidth / 2, y - buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
+          bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
         })
         .on('pointerout', () => {
           bg.clear();
           bg.fillStyle(0x3399ff, 1);
-          bg.fillRoundedRect(x - buttonWidth / 2, y - buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
+          bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
         })
         .on('pointerdown', onClick);
 
-      return { bg, text };
+      return { button, bg, text };
     };
 
     makeButton(width - 140, 75, 'Lestvica', () => this.scene.start('ScoreboardScene', { cameFromMenu: false }));
