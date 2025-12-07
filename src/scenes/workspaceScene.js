@@ -201,10 +201,9 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.createComponent(panelWidth / 2, 180, 'upor', 0xff6600);
     this.createComponent(panelWidth / 2, 260, 'svetilka', 0xff0000);
     this.createComponent(panelWidth / 2, 340, 'stikalo-on', 0x666666);
-    this.createComponent(panelWidth / 2, 420, 'stikalo-off', 0x666666);
-    this.createComponent(panelWidth / 2, 500, 'žica', 0x0066cc);
-    this.createComponent(panelWidth / 2, 580, 'ampermeter', 0x00cc66);
-    this.createComponent(panelWidth / 2, 660, 'voltmeter', 0x00cc66);
+    this.createComponent(panelWidth / 2, 420, 'žica', 0x0066cc);
+    this.createComponent(panelWidth / 2, 500, 'ampermeter', 0x00cc66);
+    this.createComponent(panelWidth / 2, 580, 'voltmeter', 0x00cc66);
 
     const backButton = this.add.text(12, 10, '↩ Nazaj', {
       fontFamily: 'Arial',
@@ -424,24 +423,6 @@ export default class WorkspaceScene extends Phaser.Scene {
         comp.localStart = { x: -40, y: 0 };
         comp.localEnd = { x: 40, y: 0 };
         componentImage = this.add.image(0, 0, 'stikalo-on')
-          .setOrigin(0.5)
-          .setDisplaySize(100, 100);
-        component.add(componentImage);
-        component.setData('logicComponent', comp)
-        break;
-
-      case 'stikalo-off':
-        id = "switch_" + this.getRandomInt(1000, 9999);
-        comp = new Switch(
-          id,
-          new Node(id + "_start", -40, 0),
-          new Node(id + "_end", 40, 0),
-          false
-        )
-        comp.type = 'switch';
-        comp.localStart = { x: -40, y: 0 };
-        comp.localEnd = { x: 40, y: 0 };
-        componentImage = this.add.image(0, 0, 'stikalo-off')
           .setOrigin(0.5)
           .setDisplaySize(100, 100);
         component.add(componentImage);
