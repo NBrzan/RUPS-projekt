@@ -8,6 +8,8 @@ import { Node } from '../logic/node';
 import { Switch } from '../components/switch';
 import { Resistor } from '../components/resistor';
 import { makeButton } from '../ui/UIButton.js';
+import { makeDropDown } from '../ui/UIDropDown.js';
+import { LabeledAction } from '../ui/LabeledAction.js';
 
 export default class WorkspaceScene extends Phaser.Scene {
   constructor() {
@@ -85,6 +87,8 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.infoText = infoText;
 
     this.input.mouse.disableContextMenu();
+    this.input.on('pointerdown', this.handleGlobalPointerDown, this);
+    this.currentDropDown = null;
 
     this.promptText = this.add.text(
       width / 1.8,
@@ -561,6 +565,17 @@ export default class WorkspaceScene extends Phaser.Scene {
             visualImage.setTexture(newTexture);
           }
           //component.setData("logicComponent", actualComponenet);
+        } else {
+          if (this.currentDropDown) {
+            this.currentDropDown.destroy();
+          }
+          this.currentDropDown = makeDropDown(this, pointer.worldX, pointer.worldY, [new LabeledAction('Syke', () => {
+            component.destroy();
+            this.currentDropDown.destroy();
+            this.currentDropDown = null;
+          })]);
+          this.currentDropDown.setDepth(1001); // Dropdown always top
+          this.currentDropDown.setVisible(true);
         }
         //console.log("SWITCH is on: ", component.getData("logicComponent").is_on);
       } else if (pointer.button == 0) {
@@ -744,6 +759,17 @@ export default class WorkspaceScene extends Phaser.Scene {
     if (this.continueButton) {
       this.continueButton.destroy();
       this.continueButton = null;
+    }
+  }
+
+  handleGlobalPointerDown(pointer) {
+    if (this.currentDropDown) {
+      const bounds = this.currentDropDown.getBounds();
+
+      if (!bounds.contains(pointer.worldX, pointer.worldY)) {
+        this.currentDropDown.destroy();
+        this.currentDropDown = null;
+      }
     }
   }
 
