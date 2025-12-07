@@ -96,7 +96,7 @@ export default class LabScene extends Phaser.Scene {
     interactiveZone.on('pointerdown', () => {
       this.cameras.main.fade(300, 0, 0, 0);
       this.time.delayedCall(300, () => {
-        this.scene.start('WorkspaceScene');
+        this.scene.start("WorkspaceScene", { isHighSchool: false });
       });
     });
     
@@ -160,15 +160,9 @@ export default class LabScene extends Phaser.Scene {
     });
     
     hsInteractiveZone.on('pointerdown', () => {
-      // this.cameras.main.fade(300, 0, 0, 0);
+      this.cameras.main.fade(300, 0, 0, 0);
       this.time.delayedCall(300, () => {
-        // For now, just show a message:
-        this.add.text(hsTableX, hsTableY, 'High school mode coming soon!', {
-          fontSize: '28px',
-          color: '#fff',
-          backgroundColor: '#2e3a87',
-          padding: { x: 20, y: 10 }
-        }).setOrigin(0.5);
+        this.scene.start("WorkspaceScene", { isHighSchool: true });
       });
     });
     

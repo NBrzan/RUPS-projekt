@@ -13,9 +13,15 @@ export default class WorkspaceScene extends Phaser.Scene {
     super('WorkspaceScene');
   }
 
-  init() {
-    const savedIndex = localStorage.getItem('currentChallengeIndex');
+  init(data) {
+    this.isHighSchool = data.isHighSchool || false;
+    if (this.isHighSchool) {
+      const savedIndex = localStorage.getItem("highschoolChallengeIndex");
+      this.currentChallengeIndex = savedIndex !== null ? parseInt(savedIndex) : 0;
+    } else {
+      const savedIndex = localStorage.getItem("elementaryChallengeIndex");
     this.currentChallengeIndex = savedIndex !== null ? parseInt(savedIndex) : 0;
+  }
   }
 
   preload() {
@@ -309,8 +315,6 @@ export default class WorkspaceScene extends Phaser.Scene {
     };
     return details[type] || 'Komponenta';
   }
-
-  
 
   snapToGrid(x, y) {
     const gridSize = this.gridSize;
@@ -706,7 +710,19 @@ export default class WorkspaceScene extends Phaser.Scene {
 
   nextChallenge() {
     this.currentChallengeIndex++;
-    localStorage.setItem('currentChallengeIndex', this.currentChallengeIndex.toString());
+
+    if (this.isHighSchool) {
+      localStorage.setItem(
+        "highschoolChallengeIndex",
+        this.currentChallengeIndex.toString()
+      );
+    } else {
+      localStorage.setItem(
+        "elementaryChallengeIndex",
+        this.currentChallengeIndex.toString()
+      );
+    }
+
     this.checkText.setText('');
 
     if (this.currentChallengeIndex < this.challenges.length) {
@@ -714,7 +730,12 @@ export default class WorkspaceScene extends Phaser.Scene {
     }
     else {
       this.promptText.setText('Vse naloge so uspešno opravljene! Čestitke!');
-      localStorage.removeItem('currentChallengeIndex');
+
+      if (this.isHighSchool) {
+        localStorage.removeItem("highschoolChallengeIndex");
+      } else {
+        localStorage.removeItem("elementaryChallengeIndex");
+      }
     }
   }
 
