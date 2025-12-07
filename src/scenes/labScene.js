@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { makeButton } from '../ui/UIButton';
 
 export default class LabScene extends Phaser.Scene {
   constructor() {
@@ -231,26 +232,8 @@ export default class LabScene extends Phaser.Scene {
     scoreButtonBg.fillStyle(0x3399ff, 1);
     scoreButtonBg.fillRoundedRect(width - buttonWidth - rightMargin, topMargin, buttonWidth, buttonHeight, cornerRadius);
 
-    const scoreButton = this.add.text(width - buttonWidth / 2 - rightMargin, topMargin + buttonHeight / 2, 'Lestvica', {
-        fontFamily: 'Arial',
-        fontSize: '20px',
-        color: '#ffffff'
-    })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerover', () => {
-            scoreButtonBg.clear();
-            scoreButtonBg.fillStyle(0x0f5cad, 1);
-            scoreButtonBg.fillRoundedRect(width - buttonWidth - rightMargin, topMargin, buttonWidth, buttonHeight, cornerRadius);
-        })
-        .on('pointerout', () => {
-            scoreButtonBg.clear();
-            scoreButtonBg.fillStyle(0x3399ff, 1);
-            scoreButtonBg.fillRoundedRect(width - buttonWidth - rightMargin, topMargin, buttonWidth, buttonHeight, cornerRadius);
-        })
-        .on('pointerdown', () => {
-            this.scene.start('ScoreboardScene', {cameFromMenu: true});
-        });
+    // width - buttonWidth / 2 - rightMargin, topMargin + buttonHeight / 2, 'Lestvica',
+    const scoreButton = makeButton(this, width - buttonWidth / 2 - rightMargin, topMargin + buttonHeight / 2, 'Lestvica',  () => this.scene.start('ScoreboardScene', { cameFromMenu: false }));
 
     // this.input.keyboard.on('keydown-ESC', () => {
     //     this.scene.start('MenuScene');
