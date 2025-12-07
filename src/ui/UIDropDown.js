@@ -3,7 +3,7 @@ const paddingHorizontal = 5;
 const paddingVertical = 5;
 const color = 'grey';
 
-const makeDropDown = (scene, x, y, labeledActions) => {
+const makeDropDown = (scene, x, y, labeledActions, closeSubDropdownCallback) => {
     const menu = scene.add.container(x, y);
     const bg = scene.add.graphics();
     menu.add(bg);
@@ -22,7 +22,14 @@ const makeDropDown = (scene, x, y, labeledActions) => {
         .setInteractive({ useHandCursor: true });
 
         text.on('pointerdown', () => {
-            if (lAction.onClick) lAction.onClick();
+            if (lAction.submenu) {
+                if (closeSubDropdownCallback) {
+                    closeSubDropdownCallback(scene);
+                }
+                const subMenu = makeDropDown(scene, menu.width, text.y, lAction.submenu, closeSubDropdownCallback);
+                menu.add(subMenu);
+                scene.currentSubDropDown = subMenu;
+            } else if (lAction.onClick) lAction.onClick();
             console.log(`Clicked: ${lAction.label}`);
         });
 

@@ -10,7 +10,7 @@ import { Resistor } from '../components/resistor';
 import { makeButton } from '../ui/UIButton.js';
 import { makeDropDown } from '../ui/UIDropDown.js';
 import { LabeledAction } from '../ui/LabeledAction.js';
-import { closeDropdown, deleteComponent, rotateComponent } from '../components/actions/dropDownOptions.js';
+import { closeDropdown, deleteComponent, rotateComponent, closeSubDropdown } from '../components/actions/dropDownOptions.js';
 import { getActionsForComponent } from '../components/actions/actionsComponent.js';
 
 export default class WorkspaceScene extends Phaser.Scene {
@@ -558,7 +558,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     if (!component.getData('isInPanel') && (pointer.getDuration() < 200)) {
       if (pointer.button == 2) {
 
-        this.currentDropDown = makeDropDown(this, pointer.worldX, pointer.worldY, getActionsForComponent(this, component));
+        this.currentDropDown = makeDropDown(this, pointer.worldX, pointer.worldY, getActionsForComponent(this, component), closeSubDropdown);
         this.currentDropDown.setDepth(1001); // Dropdown always top
         this.currentDropDown.setVisible(true);
 
