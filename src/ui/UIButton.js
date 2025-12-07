@@ -1,12 +1,12 @@
 const buttonWidth = 150;
-const buttonHeight = 40;
+const buttonHeight = 45;
 const cornerRadius = 8;
 
-const makeButton = (scene, x, y, label, onClick) => {
+const makeButton = (scene, color, hoverColor, x, y, label, onClick) => {
   const button = scene.add.container(x, y);
 
   const bg = scene.add.graphics();
-  bg.fillStyle(0x3399ff, 1);
+  bg.fillStyle(color, 1);
   bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
 
   const text = scene.add.text(0, 0, label, {
@@ -22,12 +22,12 @@ const makeButton = (scene, x, y, label, onClick) => {
     .setInteractive({ useHandCursor: true })
     .on('pointerover', () => {
       bg.clear();
-      bg.fillStyle(0x0f5cad, 1);
+      bg.fillStyle(hoverColor, 1);
       bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
     })
     .on('pointerout', () => {
       bg.clear();
-      bg.fillStyle(0x3399ff, 1);
+      bg.fillStyle(color, 1);
       bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
     })
     .on('pointerdown', onClick);

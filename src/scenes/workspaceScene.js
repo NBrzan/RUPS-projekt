@@ -108,9 +108,9 @@ export default class WorkspaceScene extends Phaser.Scene {
     const buttonHeight = 45;
     const cornerRadius = 10;
 
-    makeButton(this, width - 140, 75, 'Lestvica', () => this.scene.start('ScoreboardScene', { cameFromMenu: false }));
-    makeButton(this, width - 140, 125, 'Preveri krog', () => this.checkCircuit());
-    makeButton(this, width - 140, 175, 'Simulacija', () => {
+    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 75, 'Lestvica', () => this.scene.start('ScoreboardScene', { cameFromMenu: false }));
+    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 125, 'Preveri krog', () => this.checkCircuit());
+    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 175, 'Simulacija', () => {
       this.connected = this.graph.simulate()
       if (this.connected == 1) {
         this.checkText.setStyle({ color: '#00aa00' });
@@ -130,6 +130,7 @@ export default class WorkspaceScene extends Phaser.Scene {
       }
       this.sim = false;
     });
+    makeButton(this, 0xc91212, 0xa10d0d, width - 140, height - 80, 'Zbriši vse', () => this.clearWorkspace());
 
     // stranska vrstica na levi
     const panelWidth = 150;
@@ -643,6 +644,13 @@ export default class WorkspaceScene extends Phaser.Scene {
     // else {
     //   this.checkText.setText('Krog ni pravilen. Poskusi znova.');
     // }
+  }
+
+  clearWorkspace() {
+    this.placedComponents.forEach(comp => comp.destroy());
+    this.placedComponents = [];
+    this.graph = new CircuitGraph();
+    this.checkText.setText('');
   }
 
   nextChallenge() {

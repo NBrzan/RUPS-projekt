@@ -221,7 +221,7 @@ export default class LabScene extends Phaser.Scene {
             this.scene.start('MenuScene');
         });
 
-    const buttonWidth = 180;
+    const buttonWidth = 150;
     const buttonHeight = 45;
     const cornerRadius = 10;
     const rightMargin = 60;
@@ -233,7 +233,7 @@ export default class LabScene extends Phaser.Scene {
     scoreButtonBg.fillRoundedRect(width - buttonWidth - rightMargin, topMargin, buttonWidth, buttonHeight, cornerRadius);
 
     // width - buttonWidth / 2 - rightMargin, topMargin + buttonHeight / 2, 'Lestvica',
-    const scoreButton = makeButton(this, width - buttonWidth / 2 - rightMargin, topMargin + buttonHeight / 2, 'Lestvica',  () => this.scene.start('ScoreboardScene', { cameFromMenu: false }));
+    const scoreButton = makeButton(this, 0x3399ff, 0x0f5cad, width - buttonWidth / 2 - rightMargin, topMargin + buttonHeight / 2, 'Lestvica',  () => this.scene.start('ScoreboardScene', { cameFromMenu: false }));
 
     // this.input.keyboard.on('keydown-ESC', () => {
     //     this.scene.start('MenuScene');
