@@ -403,6 +403,8 @@ export default class WorkspaceScene extends Phaser.Scene {
         comp.type = 'bulb';
         comp.localStart = { x: -40, y: 0 };
         comp.localEnd = { x: 40, y: 0 };
+        comp.treshold = 2.0;
+        comp.maxVoltage = 6.0;
         componentImage = this.add.image(0, 0, 'svetilka')
           .setOrigin(0.5)
           .setDisplaySize(100, 100);
