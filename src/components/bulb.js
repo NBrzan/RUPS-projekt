@@ -1,9 +1,12 @@
 import { Component } from './component.js';
 
 class Bulb extends Component {
-    constructor(id, start, end) {
-        super(id, 'bulb', start, end, 'src/components/lamp.png', true);
+    constructor(id, start, end, treshold, maxVoltage) {
+        super(id, 'bulb', start, end, 'src/components/lamp.png', false);
+
         this.is_on = true;
+        this.treshold = treshold;
+        this.maxVoltage = maxVoltage;
     }
 
     // turnOn(){
