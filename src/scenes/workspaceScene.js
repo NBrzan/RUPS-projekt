@@ -10,7 +10,7 @@ import { Resistor } from '../components/resistor';
 import { makeButton } from '../ui/UIButton.js';
 import { makeDropDown } from '../ui/UIDropDown.js';
 import { LabeledAction } from '../ui/LabeledAction.js';
-import { deleteComponent, rotateComponent } from '../components/actions/dropDownOptions.js';
+import { closeDropdown, deleteComponent, rotateComponent } from '../components/actions/dropDownOptions.js';
 import { getActionsForComponent } from '../components/actions/actionsComponent.js';
 
 export default class WorkspaceScene extends Phaser.Scene {
@@ -91,6 +91,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.input.mouse.disableContextMenu();
     this.input.on('pointerdown', this.handleGlobalPointerDown, this);
     this.currentDropDown = null;
+    this.currentSubDropDown = null;
 
     this.promptText = this.add.text(
       width / 1.8,
@@ -557,9 +558,6 @@ export default class WorkspaceScene extends Phaser.Scene {
     if (!component.getData('isInPanel') && (pointer.getDuration() < 200)) {
       if (pointer.button == 2) {
 
-        if (this.currentDropDown) {
-          this.currentDropDown.destroy();
-        }
         this.currentDropDown = makeDropDown(this, pointer.worldX, pointer.worldY, getActionsForComponent(this, component));
         this.currentDropDown.setDepth(1001); // Dropdown always top
         this.currentDropDown.setVisible(true);
@@ -735,13 +733,19 @@ export default class WorkspaceScene extends Phaser.Scene {
   }
 
   handleGlobalPointerDown(pointer) {
-    if (this.currentDropDown) {
-      const bounds = this.currentDropDown.getBounds();
+    const drop = this.currentDropDown;
+    if (!drop) return;
 
-      if (!bounds.contains(pointer.worldX, pointer.worldY)) {
-        this.currentDropDown.destroy();
-        this.currentDropDown = null;
-      }
+    const x = pointer.worldX;
+    const y = pointer.worldY;
+    console.log('Exists sub: ', this.currentSubDropDown);
+
+    const insideMain = drop.getBounds().contains(x, y);
+    const insideSub = this.currentSubDropDown?.getBounds().contains(x, y) ?? false;
+
+    if (!insideMain && !insideSub) {
+      closeDropdown(this);
+
     }
   }
 

@@ -12,7 +12,7 @@ const makeDropDown = (scene, x, y, labeledActions) => {
     let maxWidth = 0;
 
     labeledActions.forEach((lAction) => {
-        
+
         const text = scene.add.text(paddingHorizontal, currentY, lAction.label, {
             fontFamily: 'Arial',
             fontSize: '20px',
@@ -40,6 +40,8 @@ const makeDropDown = (scene, x, y, labeledActions) => {
 
     bg.fillStyle(color, 1);
     bg.fillRoundedRect(0, 0, totalWidth, totalHeight, 5);
+
+    menu.setSize(totalWidth, totalHeight);
 
     return menu;
 };

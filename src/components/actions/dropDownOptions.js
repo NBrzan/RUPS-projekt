@@ -25,11 +25,15 @@ const rotateComponent = (scene, component) => {
 
 }
 
+const closeSubDropdown = (scene) => {
+  scene.currentSubDropDown?.destroy();
+  scene.currentSubDropDown = null;
+};
+
 const closeDropdown = (scene) => {
-  if (scene.currentDropDown) {
-    scene.currentDropDown.destroy();
-    scene.currentDropDown = null;
-  }
+  scene.currentDropDown?.destroy();
+  scene.currentDropDown = null;
+  //closeSubDropdown(scene);
 };
 
 
@@ -49,4 +53,26 @@ const toggleComponent = (scene, component) => {
 
 }
 
-export { deleteComponent, rotateComponent, closeDropdown, toggleComponent }
+// BATTERY
+const switchVoltageComponent = (component, voltage) => {
+  let actualComponenet = component.getData("logicComponent");
+  actualComponenet.voltage = voltage;
+}
+
+// RESISTOR
+const switchResistanceComponent = (component, resistance) => {
+  let actualComponenet = component.getData("logicComponent");
+  actualComponenet.ohm = resistance;
+}
+
+// LAMP
+const switchThresholdComponent = (component, treshold) => {
+  let actualComponenet = component.getData("logicComponent");
+}
+
+const switchMaxVoltageComponent = (component, maxVoltage) => {
+  let actualComponenet = component.getData("logicComponent");
+  actualComponenet.maxVoltage = maxVoltage;
+}
+
+export { deleteComponent, rotateComponent, closeDropdown, toggleComponent, switchVoltageComponent, closeSubDropdown, switchResistanceComponent, switchThresholdComponent, switchMaxVoltageComponent }
