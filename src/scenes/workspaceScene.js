@@ -10,6 +10,8 @@ import { Resistor } from '../components/resistor';
 import { makeButton } from '../ui/UIButton.js';
 import { makeDropDown } from '../ui/UIDropDown.js';
 import { LabeledAction } from '../ui/LabeledAction.js';
+import { deleteComponent, rotateComponent } from '../components/actions/dropDownOptions.js';
+import { getActionsForComponent } from '../components/actions/actionsComponent.js';
 
 export default class WorkspaceScene extends Phaser.Scene {
   constructor() {
@@ -72,7 +74,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.infoWindow = this.add.container(0, 0);
     this.infoWindow.setDepth(1000);
     this.infoWindow.setVisible(false);
-    
+
     // ozadje info okna
     const infoBox = this.add.rectangle(0, 0, 200, 80, 0x2c2c2c, 0.95);
     infoBox.setStrokeStyle(2, 0xffffff);
@@ -82,7 +84,7 @@ export default class WorkspaceScene extends Phaser.Scene {
         align: 'left',
         wordWrap: { width: 180 }
     }).setOrigin(0.5);
-    
+
     this.infoWindow.add([infoBox, infoText]);
     this.infoText = infoText;
 
@@ -157,17 +159,17 @@ export default class WorkspaceScene extends Phaser.Scene {
 
     trashCan.on('pointerover', () => {
         this.infoText.setText("Tukaj vrži komponente, ki jih ne želiš");
-        
+
         this.infoWindow.x = trashCanX + 120;
         this.infoWindow.y = trashCanY;
         this.infoWindow.setVisible(true);
     });
-    
+
     trashCan.on('pointerout', () => {
         this.infoWindow.setVisible(false);
     });
-    
-    
+
+
     // komponente v stranski vrstici
     this.createComponent(panelWidth / 2, 100, 'baterija', 0xffcc00);
     this.createComponent(panelWidth / 2, 180, 'upor', 0xff6600);
@@ -442,7 +444,7 @@ export default class WorkspaceScene extends Phaser.Scene {
         // prikaži info okno
         const details = this.getComponentDetails(type);
         this.infoText.setText(details);
-        
+
         // zraven komponente
         this.infoWindow.x = x + 120;
         this.infoWindow.y = y;
@@ -450,7 +452,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     }
     component.setScale(1.1);
     });
-    
+
     component.on('pointerout', () => {
         if (component.getData('isInPanel')) {
             this.infoWindow.setVisible(false);
@@ -549,7 +551,7 @@ export default class WorkspaceScene extends Phaser.Scene {
         component.setData('isDragging', false);
       });
     });
- 
+
     component.on('pointerup', (pointer) => {
 
     if (!component.getData('isInPanel') && (pointer.getDuration() < 200)) {
@@ -569,32 +571,13 @@ export default class WorkspaceScene extends Phaser.Scene {
           if (this.currentDropDown) {
             this.currentDropDown.destroy();
           }
-          this.currentDropDown = makeDropDown(this, pointer.worldX, pointer.worldY, [new LabeledAction('Syke', () => {
-            component.destroy();
-            this.currentDropDown.destroy();
-            this.currentDropDown = null;
-          })]);
+          this.currentDropDown = makeDropDown(this, pointer.worldX, pointer.worldY, getActionsForComponent(this, component));
           this.currentDropDown.setDepth(1001); // Dropdown always top
           this.currentDropDown.setVisible(true);
         }
         //console.log("SWITCH is on: ", component.getData("logicComponent").is_on);
       } else if (pointer.button == 0) {
-        const currentRotation = component.getData('rotation');
-        const newRotation = (currentRotation + 90) % 360;
-        
-        component.setData('rotation', newRotation);
-        component.setData('isRotated', !component.getData('isRotated'));
-
-        this.tweens.add({
-          targets: component,
-          angle: "+=90",
-          duration: 150,
-          ease: 'Cubic.easeOut',
-          onComplete: () => {
-            this.updateLogicNodePositions(component);
-          }
-        });
-
+        rotateComponent(this, component);
       }
     }
     });
@@ -620,7 +603,7 @@ export default class WorkspaceScene extends Phaser.Scene {
       return;
     }
 
-    // je pravilna simulacija 
+    // je pravilna simulacija
     if (this.sim == undefined) {
       this.checkText.setText('Zaženi simlacijo');
       return;
