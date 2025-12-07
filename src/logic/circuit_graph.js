@@ -57,6 +57,21 @@ class CircuitGraph {
         return node;
     }
 
+    /**
+     * Detect branch points in the graph.
+     * A branch point is a node with 3 or more connections.
+     * Call this after all components are added.
+     */
+    detectJunctionNodes() {
+        this.junctionNodes = [];
+        for (const node of this.nodes.values()) {
+            if (node.connected && node.connected.size >= 3) {
+                this.junctionNodes.push(node);
+            }
+        }
+        return this.junctionNodes;
+    }
+
 
     addComponent(component) {
         if (!component || !component.start || !component.end) return;
