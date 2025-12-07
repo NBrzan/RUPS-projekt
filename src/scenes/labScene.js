@@ -31,8 +31,8 @@ export default class LabScene extends Phaser.Scene {
     // tla
     this.add.rectangle(0, height - 150, width, 150, 0xd4c4a8).setOrigin(0);
     
-    // miza
-    const tableX = width / 2;
+    // --- PRIMARY TABLE (elementary) ---
+    const tableX = width / 3 - 150;
     const tableY = height / 2 + 50;
     const tableWidth = 500;
     const tableHeight = 250;
@@ -96,7 +96,7 @@ export default class LabScene extends Phaser.Scene {
     interactiveZone.on('pointerdown', () => {
       this.cameras.main.fade(300, 0, 0, 0);
       this.time.delayedCall(300, () => {
-        this.scene.start('WorkspaceScene');
+        this.scene.start("WorkspaceScene", { isHighSchool: false });
       });
     });
     
@@ -106,6 +106,72 @@ export default class LabScene extends Phaser.Scene {
     
     interactiveZone.on('pointerout', () => {
       tableSurface.setFillStyle(0xa0826d);
+    });
+    
+    // --- SECONDARY TABLE (high school) ---
+    const hsTableX = (2 * width) / 3 + 150;
+    const hsTableY = tableY;
+    const hsTableTop = this.add.rectangle(hsTableX, hsTableY, tableWidth, 30, 0x2e3a87).setOrigin(0.5);
+    const hsTableSurface = this.add.rectangle(hsTableX, hsTableY + 15, tableWidth - 30, tableHeight - 30, 0x4b5bbf).setOrigin(0.5, 0);
+    
+    // mreža za drugo mizo
+    const hsGridGraphics = this.add.graphics();
+    hsGridGraphics.lineStyle(1, 0x223366, 0.3);
+    const hsGridStartX = hsTableX - (tableWidth - 30) / 2;
+    const hsGridStartY = hsTableY + 15;
+    const hsGridEndX = hsTableX + (tableWidth - 30) / 2;
+    const hsGridEndY = hsTableY + 15 + (tableHeight - 30);
+    
+    for (let x = hsGridStartX; x <= hsGridEndX; x += gridSize) {
+      hsGridGraphics.beginPath();
+      hsGridGraphics.moveTo(x, hsGridStartY);
+      hsGridGraphics.lineTo(x, hsGridEndY);
+      hsGridGraphics.strokePath();
+    }
+    for (let y = hsGridStartY; y <= hsGridEndY; y += gridSize) {
+      hsGridGraphics.beginPath();
+      hsGridGraphics.moveTo(hsGridStartX, y);
+      hsGridGraphics.lineTo(hsGridEndX, y);
+      hsGridGraphics.strokePath();
+    }
+    
+    // nogice druge mize
+    this.add.rectangle(hsTableX - tableWidth/2 + 40, hsTableY + tableHeight/2 + 20, legWidth, legHeight, 0x1a224d);
+    this.add.rectangle(hsTableX + tableWidth/2 - 40, hsTableY + tableHeight/2 + 20, legWidth, legHeight, 0x1a224d);
+    
+    // interaktivnost druge mize
+    const hsInteractiveZone = this.add.zone(hsTableX, hsTableY + tableHeight/2, tableWidth, tableHeight)
+      .setInteractive({ useHandCursor: true });
+    
+    const hsInstruction = this.add.text(hsTableX, hsTableY - 80, 'Klikni na modro mizo za srednješolske naloge!', {
+      fontSize: '24px',
+      color: '#fff',
+      fontStyle: 'bold',
+      backgroundColor: '#2e3a87',
+      padding: { x: 20, y: 10 }
+    }).setOrigin(0.5);
+    
+    this.tweens.add({
+      targets: hsInstruction,
+      alpha: 0.5,
+      duration: 1000,
+      yoyo: true,
+      repeat: -1
+    });
+    
+    hsInteractiveZone.on('pointerdown', () => {
+      this.cameras.main.fade(300, 0, 0, 0);
+      this.time.delayedCall(300, () => {
+        this.scene.start("WorkspaceScene", { isHighSchool: true });
+      });
+    });
+    
+    hsInteractiveZone.on('pointerover', () => {
+      hsTableSurface.setFillStyle(0x6b7be0);
+    });
+    
+    hsInteractiveZone.on('pointerout', () => {
+      hsTableSurface.setFillStyle(0x4b5bbf);
     });
 
     const username = localStorage.getItem('username');
