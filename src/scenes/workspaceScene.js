@@ -108,6 +108,8 @@ export default class WorkspaceScene extends Phaser.Scene {
     const buttonHeight = 45;
     const cornerRadius = 10;
 
+    const panelWidth = 150;
+
     makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 75, 'Lestvica', () => this.scene.start('ScoreboardScene', { cameFromMenu: false }));
     makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 125, 'Preveri krog', () => this.checkCircuit());
     makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 175, 'Simulacija', () => {
@@ -133,7 +135,6 @@ export default class WorkspaceScene extends Phaser.Scene {
     makeButton(this, 0xc91212, 0xa10d0d, width - 140, height - 80, 'Zbriši vse', () => this.clearWorkspace());
 
     // stranska vrstica na levi
-    const panelWidth = 150;
     this.add.rectangle(0, 0, panelWidth, height, 0xc0c0c0).setOrigin(0);
     this.add.rectangle(0, 0, panelWidth, height, 0x000000, 0.2).setOrigin(0);
 
@@ -202,6 +203,13 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.placedComponents = [];
     this.gridSize = 40;
 
+    this.selectionRect = null;
+    this.isSelectionActive = false;
+    this.selectionStart = { x: 0, y: 0 };
+    this.selectionEnd = { x: 0, y: 0 };
+    this.selectedComponents = [];
+    this.groupDragOffsets = new Map();
+
     // const scoreButton = this.add.text(this.scale.width / 1.1, 25, 'Lestvica', {
     //   fontFamily: 'Arial',
     //   fontSize: '18px',
@@ -234,6 +242,112 @@ export default class WorkspaceScene extends Phaser.Scene {
     //   });
 
     console.log(JSON.parse(localStorage.getItem('users')));
+
+    this.input.on('pointerdown', (pointer, currentlyOver) => {
+      if (currentlyOver && currentlyOver.some(obj => obj.getData && obj.getData('type') && !obj.getData('isInPanel'))) {
+        return;
+      }
+
+      if (pointer.leftButtonDown() && pointer.x > panelWidth) {
+        this.isSelectionActive = true;
+        this.selectionStart = { x: pointer.x, y: pointer.y };
+        this.selectionEnd = { x: pointer.x, y: pointer.y };
+
+        if (!this.selectionRect) {
+          this.selectionRect = this.add.rectangle(pointer.x, pointer.y, 1, 1, 0x545454, 0.2)
+            .setStrokeStyle(2, 0x808080)
+            .setOrigin(0);
+          this.selectionRect.setDepth(900);
+        } else {
+          this.selectionRect.setVisible(true);
+        }
+
+        this.selectionRect.x = pointer.x;
+        this.selectionRect.y = pointer.y;
+        this.selectionRect.width = 1;
+        this.selectionRect.height = 1;
+
+        this.selectedComponents.forEach(c => {
+          c.setAlpha(1);
+          const children = c.list || [];
+          children.forEach(child => {
+            if (child.getData && child.getData('isLabelBg')) {
+              child.clear();
+              child.fillStyle(0x000000, 0.53);
+              child.fillRoundedRect(-40, 15, 80, 20, 4);
+            }
+          });
+        });
+        this.selectedComponents = [];
+      }
+    });
+
+    this.input.on('pointermove', (pointer) => {
+      if (!this.isSelectionActive || !this.selectionRect) return;
+
+      this.selectionEnd = { x: pointer.x, y: pointer.y };
+
+      const x = Math.min(this.selectionStart.x, this.selectionEnd.x);
+      const y = Math.min(this.selectionStart.y, this.selectionEnd.y);
+      const w = Math.abs(this.selectionEnd.x - this.selectionStart.x);
+      const h = Math.abs(this.selectionEnd.y - this.selectionStart.y);
+
+      this.selectionRect.x = x;
+      this.selectionRect.y = y;
+      this.selectionRect.width = w;
+      this.selectionRect.height = h;
+    });
+
+    this.input.on('pointerup', (pointer) => {
+      if (!this.isSelectionActive || !this.selectionRect) return;
+
+      this.isSelectionActive = false;
+      this.selectionRect.setVisible(false);
+
+      const x = this.selectionRect.x;
+      const y = this.selectionRect.y;
+      const w = this.selectionRect.width;
+      const h = this.selectionRect.height;
+
+      this.selectedComponents = this.placedComponents.filter(comp => {
+        const cx = comp.x;
+        const cy = comp.y;
+        return cx >= x && cx <= x + w && cy >= y && cy <= y + h;
+      });
+
+      this.selectedComponents.forEach(c => {
+        c.setAlpha(0.7);
+        const children = c.list || [];
+        children.forEach(child => {
+          if (child.getData && child.getData('isLabelBg')) {
+            child.clear();
+            child.fillStyle(0x182235, 0.75);
+            child.fillRoundedRect(-40, 15, 80, 20, 4);
+          }
+        });
+      });
+
+      this.groupDragOffsets.clear();
+      if (this.selectedComponents.length > 0) {
+        const center = this.selectedComponents.reduce((acc, c) => {
+          acc.x += c.x;
+          acc.y += c.y;
+          return acc;
+        }, { x: 0, y: 0 });
+        center.x /= this.selectedComponents.length;
+        center.y /= this.selectedComponents.length;
+
+        this.originalGroupCenter = { x: center.x, y: center.y };
+        this.originalGroupOffsets = new Map();
+
+        this.selectedComponents.forEach(c => {
+          this.originalGroupOffsets.set(c, { dx: c.x - center.x, dy: c.y - center.y });
+        });
+      } else {
+        this.originalGroupCenter = null;
+        this.originalGroupOffsets = null;
+      }
+    });
   }
 
   getComponentDetails(type) {
@@ -471,14 +585,18 @@ export default class WorkspaceScene extends Phaser.Scene {
         component.setScale(1);
     });
 
-    // Label
-    const label = this.add.text(0, 30, type, {
+    // Label background + text
+    const labelBg = this.add.graphics();
+    labelBg.fillStyle(0x000000, 0.53);
+    labelBg.fillRoundedRect(-40, 15, 80, 20, 4);
+    labelBg.setData('isLabelBg', true);
+
+    const label = this.add.text(0, 25, type, {
       fontSize: '11px',
-      color: '#fff',
-      backgroundColor: '#00000088',
-      padding: { x: 4, y: 2 },
+      color: '#ffffff',
     }).setOrigin(0.5);
-    component.add(label);
+
+    component.add([labelBg, label]);
 
     component.setSize(70, 70);
     component.setInteractive({ draggable: true, useHandCursor: true });
@@ -495,17 +613,80 @@ export default class WorkspaceScene extends Phaser.Scene {
 
     this.input.setDraggable(component);
 
-    component.on('dragstart', () => {
+    component.on('dragstart', (pointer) => {
       component.setData('isDragging', true);
+
+      if (this.selectedComponents && this.selectedComponents.includes(component) && this.selectedComponents.length > 1) {
+        const centerX = pointer.x;
+        const centerY = pointer.y;
+
+        this.selectedComponents.forEach(c => {
+          this.tweens.add({
+            targets: c,
+            x: centerX,
+            y: centerY,
+            duration: 150,
+            ease: 'Cubic.easeOut'
+          });
+        });
+
+        this.groupDragOffsets.clear();
+      } else {
+        if (this.selectedComponents) {
+          this.selectedComponents.forEach(c => c.setAlpha(1));
+        }
+        this.selectedComponents = [];
+        this.groupDragOffsets.clear();
+      }
     });
 
     component.on('drag', (pointer, dragX, dragY) => {
-      component.x = dragX;
-      component.y = dragY;
+      if (this.selectedComponents && this.selectedComponents.includes(component) && this.selectedComponents.length > 1) {
+        this.selectedComponents.forEach(c => {
+          c.x = pointer.x;
+          c.y = pointer.y;
+        });
+      } else {
+        component.x = dragX;
+        component.y = dragY;
+      }
     });
 
     component.on('dragend', () => {
       const isInPanel = component.x < 200;
+
+      if (this.selectedComponents && this.selectedComponents.length > 1 && this.selectedComponents.includes(component) && this.originalGroupCenter && this.originalGroupOffsets) {
+        if (component.x < 150) {
+          this.selectedComponents.forEach(c => {
+            c.destroy();
+          });
+          this.selectedComponents = [];
+          this.originalGroupCenter = null;
+          this.originalGroupOffsets = null;
+          return;
+        }
+
+        const snappedCenter = this.snapToGrid(component.x, component.y);
+
+        this.selectedComponents.forEach(c => {
+          const rel = this.originalGroupOffsets.get(c);
+          if (rel) {
+            this.tweens.add({
+              targets: c,
+              x: snappedCenter.x + rel.dx,
+              y: snappedCenter.y + rel.dy,
+              duration: 150,
+              ease: 'Cubic.easeOut',
+              onUpdate: () => {
+                this.updateLogicNodePositions(c);
+              },
+              onComplete: () => {
+                this.updateLogicNodePositions(c);
+              }
+            });
+          }
+        });
+      }
 
       if (isInPanel && !component.getData('isInPanel')) {
         // če je ob strani, se odstrani
