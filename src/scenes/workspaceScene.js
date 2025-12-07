@@ -608,7 +608,11 @@ export default class WorkspaceScene extends Phaser.Scene {
           angle: "+=90",
           duration: 150,
           ease: 'Cubic.easeOut',
+          onComplete: () => {
+            this.updateLogicNodePositions(component);
+          }
         });
+
       }
     });
 
