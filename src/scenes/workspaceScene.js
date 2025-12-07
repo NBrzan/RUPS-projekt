@@ -556,25 +556,14 @@ export default class WorkspaceScene extends Phaser.Scene {
 
     if (!component.getData('isInPanel') && (pointer.getDuration() < 200)) {
       if (pointer.button == 2) {
-        let actualComponenet = component.getData("logicComponent");
-        if (actualComponenet.type == "switch") {
-          actualComponenet.toggle();
-          const visualImage = component.list.find(child => child.type === 'Image');
 
-          if (visualImage) {
-            const newTexture = actualComponenet.is_on ? 'stikalo-on' : 'stikalo-off';
-            component.setData('type', newTexture);
-            visualImage.setTexture(newTexture);
-          }
-          //component.setData("logicComponent", actualComponenet);
-        } else {
-          if (this.currentDropDown) {
-            this.currentDropDown.destroy();
-          }
-          this.currentDropDown = makeDropDown(this, pointer.worldX, pointer.worldY, getActionsForComponent(this, component));
-          this.currentDropDown.setDepth(1001); // Dropdown always top
-          this.currentDropDown.setVisible(true);
+        if (this.currentDropDown) {
+          this.currentDropDown.destroy();
         }
+        this.currentDropDown = makeDropDown(this, pointer.worldX, pointer.worldY, getActionsForComponent(this, component));
+        this.currentDropDown.setDepth(1001); // Dropdown always top
+        this.currentDropDown.setVisible(true);
+
         //console.log("SWITCH is on: ", component.getData("logicComponent").is_on);
       } else if (pointer.button == 0) {
         rotateComponent(this, component);
