@@ -110,8 +110,17 @@ export default class WorkspaceScene extends Phaser.Scene {
 
     const panelWidth = 150;
 
-    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 75, 'Lestvica', () => this.scene.start('ScoreboardScene', { cameFromMenu: false }));
-    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 125, 'Preveri krog', () => this.checkCircuit());
+    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 75, 'Lestvica', () => this.scene.start('ScoreboardScene', { cameFromMenu: false }), { enabled: true });
+    this.checkButton = makeButton(
+      this,
+      0x3399ff,
+      0x0f5cad,
+      width - 140,
+      125,
+      'Preveri krog',
+      () => this.checkCircuit(),
+      { enabled: true }
+    );
     makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 175, 'Simulacija', () => {
       this.connected = this.graph.simulate()
       if (this.connected == 1) {
@@ -131,8 +140,8 @@ export default class WorkspaceScene extends Phaser.Scene {
         this.checkText.setText('Električni tok ni sklenjen');
       }
       this.sim = false;
-    });
-    makeButton(this, 0xc91212, 0xa10d0d, width - 140, height - 80, 'Zbriši vse', () => this.clearWorkspace());
+    }, { enabled: true });
+    makeButton(this, 0xc91212, 0xa10d0d, width - 140, height - 80, 'Zbriši vse', () => this.clearWorkspace(), { enabled: true });
 
     // stranska vrstica na levi
     this.add.rectangle(0, 0, panelWidth, height, 0xc0c0c0).setOrigin(0);
@@ -210,36 +219,38 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.selectedComponents = [];
     this.groupDragOffsets = new Map();
 
-    // const scoreButton = this.add.text(this.scale.width / 1.1, 25, 'Lestvica', {
-    //   fontFamily: 'Arial',
-    //   fontSize: '18px',
-    //   color: '#0066ff',
-    //   backgroundColor: '#e1e9ff',
-    //   padding: { x: 20, y: 10 }
-    // })
-    //   .setOrigin(0.5)
-    //   .setInteractive({ useHandCursor: true })
-    //   .on('pointerover', () => scoreButton.setStyle({ color: '#0044cc' }))
-    //   .on('pointerout', () => scoreButton.setStyle({ color: '#0066ff' }))
-    //   .on('pointerdown', () => {
-    //     this.scene.start('ScoreboardScene');
-    //   });
+    /*
+    const scoreButton = this.add.text(this.scale.width / 1.1, 25, 'Lestvica', {
+      fontFamily: 'Arial',
+      fontSize: '18px',
+      color: '#0066ff',
+      backgroundColor: '#e1e9ff',
+      padding: { x: 20, y: 10 }
+    })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerover', () => scoreButton.setStyle({ color: '#0044cc' }))
+      .on('pointerout', () => scoreButton.setStyle({ color: '#0066ff' }))
+      .on('pointerdown', () => {
+        this.scene.start('ScoreboardScene');
+      });
 
-    // const simulate = this.add.text(this.scale.width / 1.1, 25, 'Simulacija', {
-    //   fontFamily: 'Arial',
-    //   fontSize: '18px',
-    //   color: '#0066ff',
-    //   backgroundColor: '#e1e9ff',
-    //   padding: { x: 20, y: 10 }
-    // })
-    //   .setOrigin(0.5, -1)
-    //   .setInteractive({ useHandCursor: true })
-    //   .on('pointerover', () => simulate.setStyle({ color: '#0044cc' }))
-    //   .on('pointerout', () => simulate.setStyle({ color: '#0066ff' }))
-    //   .on('pointerdown', () => {
-    //     console.log(this.graph);
-    //     this.graph.simulate();
-    //   });
+    const simulate = this.add.text(this.scale.width / 1.1, 25, 'Simulacija', {
+      fontFamily: 'Arial',
+      fontSize: '18px',
+      color: '#0066ff',
+      backgroundColor: '#e1e9ff',
+      padding: { x: 20, y: 10 }
+    })
+      .setOrigin(0.5, -1)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerover', () => simulate.setStyle({ color: '#0044cc' }))
+      .on('pointerout', () => simulate.setStyle({ color: '#0066ff' }))
+      .on('pointerdown', () => {
+        console.log(this.graph);
+        this.graph.simulate();
+      });
+    */
 
     console.log(JSON.parse(localStorage.getItem('users')));
 
@@ -805,6 +816,9 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.checkText.setStyle({ color: '#00aa00' });
     this.checkText.setText('Čestitke! Krog je pravilen.');
     this.addPoints(10);
+    if (this.checkButton && this.checkButton.disable) {
+      this.checkButton.disable();
+    }
 
     if (currentChallenge.theory) {
       this.showTheory(currentChallenge.theory);
@@ -815,18 +829,20 @@ export default class WorkspaceScene extends Phaser.Scene {
       this.addPoints(10);
       this.time.delayedCall(2000, () => this.nextChallenge());
     }
-    // this.placedComponents.forEach(comp => comp.destroy());
-    // this.placedComponents = [];
-    // this.time.delayedCall(2000, () => this.nextChallenge());
-    // const isCorrect = currentChallenge.requiredComponents.every(req => placedTypes.includes(req));
-    // if (isCorrect) {
-    //   this.checkText.setText('Čestitke! Krog je pravilen.');
-    //   this.addPoints(10);
-    //   this.time.delayedCall(2000, () => this.nextChallenge());
-    // }
-    // else {
-    //   this.checkText.setText('Krog ni pravilen. Poskusi znova.');
-    // }
+    /*
+    this.placedComponents.forEach(comp => comp.destroy());
+    this.placedComponents = [];
+    this.time.delayedCall(2000, () => this.nextChallenge());
+    const isCorrect = currentChallenge.requiredComponents.every(req => placedTypes.includes(req));
+    if (isCorrect) {
+      this.checkText.setText('Čestitke! Krog je pravilen.');
+      this.addPoints(10);
+      this.time.delayedCall(2000, () => this.nextChallenge());
+    }
+    else {
+      this.checkText.setText('Krog ni pravilen. Poskusi znova.');
+    }
+    */
   }
 
   clearWorkspace() {
@@ -910,6 +926,10 @@ export default class WorkspaceScene extends Phaser.Scene {
         this.placedComponents.forEach(comp => comp.destroy());
         this.placedComponents = [];
         this.nextChallenge();
+
+        if (this.checkButton && this.checkButton.disable) {
+          this.checkButton.enable();
+        }
       });
 
 
