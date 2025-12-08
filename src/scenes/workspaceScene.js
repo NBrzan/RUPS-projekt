@@ -145,7 +145,14 @@ export default class WorkspaceScene extends Phaser.Scene {
       }
       this.sim = false;
     }, { enabled: true });
-    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 225, 'Pokaži več', () => this.specialDescMode = !this.specialDescMode, { enabled: true }); // TODO: change colit when changing value
+    this.detailedViewButton = makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 225, 'Pokaži več', () => {
+      this.specialDescMode = !this.specialDescMode;
+      if (this.specialDescMode) {
+        this.detailedViewButton.setColor(0x00aa00);
+      } else {
+        this.detailedViewButton.setColor(0x3399ff);
+      }
+    }, { enabled: true });
 
     makeButton(this, 0xc91212, 0xa10d0d, width - 140, height - 80, 'Zbriši vse', () => this.clearWorkspace(), { enabled: true });
 

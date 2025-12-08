@@ -72,6 +72,11 @@ const makeButton = (scene, color, hoverColor, x, y, label, onClick, options = {}
   button.text = text;
   button.drawBg = drawBg;
 
+  button.setColor = (newColor) => {
+    button.setData('color', newColor);
+    drawBg(newColor);
+  }
+
   // set size + interactive
   button
     .setSize(buttonWidth, buttonHeight)
@@ -79,10 +84,10 @@ const makeButton = (scene, color, hoverColor, x, y, label, onClick, options = {}
     .setInteractive(new Phaser.Geom.Rectangle(0, 0, buttonWidth, buttonHeight), Phaser.Geom.Rectangle.Contains, { useHandCursor: true })
     .on('pointerover', () => {
       if (!button.getData('enabled')) return;
-      drawBg(hoverColor);
+      drawBg(button.getData('hoverColor'));
     })
     .on('pointerout', () => {
-      drawBg(button.getData('enabled') ? color : 0x777777);
+      drawBg(button.getData('enabled') ? button.getData('color') : 0x777777);
     })
     .on('pointerdown', () => {
       if (!button.getData('enabled')) return;
@@ -91,11 +96,13 @@ const makeButton = (scene, color, hoverColor, x, y, label, onClick, options = {}
 
   // store state + helper methods
   button.setData('enabled', enabled);
+  button.setData('color', color);
+  button.setData('hoverColor', hoverColor);
 
   button.enable = () => {
     button.setData('enabled', true);
     text.setAlpha(1);
-    drawBg(color);
+    drawBg(button.getData('color'));
     // make non-interactive -> interactive transition
     if (!button.input || !button.input.enabled) {
       button.setInteractive(new Phaser.Geom.Rectangle(-buttonWidth/2, -buttonHeight/2, buttonWidth, buttonHeight), Phaser.Geom.Rectangle.Contains, { useHandCursor: true });
