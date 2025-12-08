@@ -18,6 +18,13 @@ class Bulb extends Component {
     //     this.is_on = false;
     //     console.log(`💡 Bulb ${this.id} is now OFF.`);
     // }
+
+    getSpecialPropertiesDescription() {
+        const hasSpecial = true;
+        let description = "Največja napetost: " + this.maxVoltage + "V\n";
+        description += "Prag: " + this.treshold + "V";
+        return {hasSpecial, description}
+    }
 }
 
 export { Bulb };

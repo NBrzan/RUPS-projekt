@@ -8,6 +8,7 @@ import { Node } from '../logic/node';
 import { Switch } from '../components/switch';
 import { Resistor } from '../components/resistor';
 import { makeButton } from '../ui/UIButton.js';
+import { MiniWindow } from '../ui/UIMiniWindow.js';
 
 export default class WorkspaceScene extends Phaser.Scene {
   constructor() {
@@ -66,6 +67,9 @@ export default class WorkspaceScene extends Phaser.Scene {
       gridGraphics.lineTo(width, y);
       gridGraphics.strokePath();
     }
+
+    this.specialDescWindow = new MiniWindow(this, 0, 0);
+    this.specialDescMode = false;
 
     this.infoWindow = this.add.container(0, 0);
     this.infoWindow.setDepth(1000);
@@ -141,6 +145,8 @@ export default class WorkspaceScene extends Phaser.Scene {
       }
       this.sim = false;
     }, { enabled: true });
+    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 225, 'Pokaži več', () => this.specialDescMode = !this.specialDescMode, { enabled: true }); // TODO: change colit when changing value
+
     makeButton(this, 0xc91212, 0xa10d0d, width - 140, height - 80, 'Zbriši vse', () => this.clearWorkspace(), { enabled: true });
 
     // stranska vrstica na levi
@@ -585,6 +591,12 @@ export default class WorkspaceScene extends Phaser.Scene {
         this.infoWindow.x = x + 120;
         this.infoWindow.y = y;
         this.infoWindow.setVisible(true);
+    }else {
+        const details = component.getData("logicComponent").getSpecialPropertiesDescription();
+        const draging = component.setData('isDragging');
+        if (this.specialDescMode && draging && details.hasSpecial)
+        this.specialDescWindow.show(details.description, component.x + 120, component.y);
+
     }
     component.setScale(1.1);
     });
@@ -593,6 +605,8 @@ export default class WorkspaceScene extends Phaser.Scene {
         if (component.getData('isInPanel')) {
             this.infoWindow.setVisible(false);
         }
+        this.specialDescWindow.hide();
+
         component.setScale(1);
     });
 
@@ -626,6 +640,7 @@ export default class WorkspaceScene extends Phaser.Scene {
 
     component.on('dragstart', (pointer) => {
       component.setData('isDragging', true);
+      this.specialDescWindow.hide();
 
       if (this.selectedComponents && this.selectedComponents.includes(component) && this.selectedComponents.length > 1) {
         const centerX = pointer.x;

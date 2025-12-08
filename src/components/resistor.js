@@ -5,6 +5,12 @@ class Resistor extends Component{
         super(id, 'resistor', start, end, 'src/components/resistor.png', true);
         this.ohm = ohm
     }
+
+    getSpecialPropertiesDescription() {
+        const hasSpecial = true;
+        const description = "Upor: " + this.ohm + "\u03a9";
+        return {hasSpecial, description}
+    }
 }
 
 export {Resistor}
