@@ -154,7 +154,9 @@ export default class WorkspaceScene extends Phaser.Scene {
       }
     }, { enabled: true });
 
-    makeButton(this, 0xc91212, 0xa10d0d, width - 140, height - 80, 'Zbriši vse', () => this.clearWorkspace(), { enabled: true });
+    makeButton(this, 0xc91212, 0xa10d0d, width - 140, height - 80, 'Zbriši vse', () => {
+      this.showClearConfirm();
+    }, { enabled: true });
 
     // stranska vrstica na levi
     this.add.rectangle(0, 0, panelWidth, height, 0xc0c0c0).setOrigin(0);
@@ -913,6 +915,71 @@ export default class WorkspaceScene extends Phaser.Scene {
       userData.score = (userData.score || 0) + points;
     }
     localStorage.setItem('users', JSON.stringify(users));
+  }
+
+  showClearConfirm() {
+    const { width, height } = this.cameras.main;
+
+    // background overlay
+    const overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.5)
+      .setOrigin(0)
+      .setDepth(1000);
+
+    const dialogWidth = Math.min(400, width - 80);
+    const dialogHeight = 180;
+
+    const dialogBg = this.add.rectangle(width / 2, height / 2, dialogWidth, dialogHeight, 0xffffff, 1)
+      .setStrokeStyle(2, 0x333333)
+      .setDepth(1001);
+
+    const message = this.add.text(width / 2, height / 2 - 30, 'Ali si siguren?', {
+      fontSize: '22px',
+      color: '#000000',
+      fontStyle: 'bold',
+      align: 'center',
+      wordWrap: { width: dialogWidth - 40 }
+    }).setOrigin(0.5).setDepth(1002);
+
+    const closeDialog = () => {
+      overlay.destroy();
+      dialogBg.destroy();
+      message.destroy();
+      yesBtn.destroy();
+      noBtn.destroy();
+    };
+
+    // "Prekini" button
+    const noBtn = this.add.text(width / 2 - 60, height / 2 + 40, 'Prekliči', {
+      fontSize: '20px',
+      color: '#ffffff',
+      backgroundColor: '#dc3545',
+      padding: { x: 20, y: 8 }
+    })
+      .setOrigin(0.5)
+      .setDepth(1002)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerover', () => noBtn.setStyle({ backgroundColor: '#c82333' }))
+      .on('pointerout', () => noBtn.setStyle({ backgroundColor: '#dc3545' }))
+      .on('pointerdown', () => {
+        closeDialog();
+      });
+
+    // "Da" button
+    const yesBtn = this.add.text(width / 2 + 60, height / 2 + 40, 'Da', {
+      fontSize: '20px',
+      color: '#ffffff',
+      backgroundColor: '#28a745',
+      padding: { x: 20, y: 8 }
+    })
+      .setOrigin(0.5)
+      .setDepth(1002)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerover', () => yesBtn.setStyle({ backgroundColor: '#218838' }))
+      .on('pointerout', () => yesBtn.setStyle({ backgroundColor: '#28a745' }))
+      .on('pointerdown', () => {
+        this.clearWorkspace();
+        closeDialog();
+      });
   }
 
   showTheory(theoryText) {
