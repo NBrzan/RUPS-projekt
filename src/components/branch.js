@@ -25,3 +25,5 @@ class Branch {
         return current * resistance;
     }
 }
+
+export { Branch };
