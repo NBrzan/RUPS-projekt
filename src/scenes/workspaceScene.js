@@ -108,6 +108,11 @@ export default class WorkspaceScene extends Phaser.Scene {
       padding: { x: 15, y: 8 }
     }).setOrigin(0.5);
 
+    this.uiForbiddenZones = [
+      { x: width - 270, y: 40, width: 400, height: 260 },
+      { x: width - 270, y: height - 120, width: 400, height: 140 }
+    ];
+
     const buttonWidth = 180;
     const buttonHeight = 45;
     const cornerRadius = 10;
@@ -273,8 +278,6 @@ export default class WorkspaceScene extends Phaser.Scene {
       });
     */
 
-    console.log(JSON.parse(localStorage.getItem('users')));
-
     this.input.on('pointerdown', (pointer, currentlyOver) => {
       if (currentlyOver && currentlyOver.some(obj => obj.getData && obj.getData('type') && !obj.getData('isInPanel'))) {
         return;
@@ -403,7 +406,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     // komponeta se postavi na presečišče
     const snappedX = Math.round((x - startX) / gridSize) * gridSize + startX;
     const snappedY = Math.round(y / gridSize) * gridSize;
-
+    
     return { x: snappedX, y: snappedY };
   }
 
@@ -780,8 +783,24 @@ export default class WorkspaceScene extends Phaser.Scene {
         // če je ob strani, se odstrani
         component.destroy();
       } else if (!isInPanel && component.getData('isInPanel')) {
-        // s strani na mizo
+        // s strani na mizo – najprej preveri, ali je cilj v prepovedanem UI območju
         const snapped = this.snapToGrid(component.x, component.y);
+
+        const inForbiddenZone = this.uiForbiddenZones && this.uiForbiddenZones.some(zone => {
+          return (
+            snapped.x >= zone.x && snapped.x <= zone.x + zone.width &&
+            snapped.y >= zone.y && snapped.y <= zone.y + zone.height
+          );
+        });
+
+        if (inForbiddenZone) {
+          // če je cilj v UI območju, komponento vrni v panel in ne ustvari nove
+          component.x = component.getData('originalX');
+          component.y = component.getData('originalY');
+          this.updateLogicNodePositions(component);
+          return;
+        }
+
         component.x = snapped.x;
         component.y = snapped.y;
         this.infoWindow.setVisible(false);
@@ -811,10 +830,26 @@ export default class WorkspaceScene extends Phaser.Scene {
         this.placedComponents.push(component);
 
       } else if (!component.getData('isInPanel')) {
-        // na mizi in se postavi na mrežo
+        // na mizi in se postavi na mrežo, razen če je v prepovedanem UI območju
         const snapped = this.snapToGrid(component.x, component.y);
-        component.x = snapped.x;
-        component.y = snapped.y;
+
+        const inForbiddenZone = this.uiForbiddenZones && this.uiForbiddenZones.some(zone => {
+          return (
+            snapped.x >= zone.x && snapped.x <= zone.x + zone.width &&
+            snapped.y >= zone.y && snapped.y <= zone.y + zone.height
+          );
+        });
+
+        if (inForbiddenZone) {
+          // vrni na zadnjo veljavno pozicijo
+          component.x = component.getData('lastValidX') ?? component.getData('originalX');
+          component.y = component.getData('lastValidY') ?? component.getData('originalY');
+        } else {
+          component.x = snapped.x;
+          component.y = snapped.y;
+          component.setData('lastValidX', component.x);
+          component.setData('lastValidY', component.y);
+        }
 
         this.updateLogicNodePositions(component);
 
