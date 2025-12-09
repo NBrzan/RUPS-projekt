@@ -114,7 +114,10 @@ export default class WorkspaceScene extends Phaser.Scene {
 
     const panelWidth = 150;
 
-    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 75, 'Lestvica', () => this.scene.start('ScoreboardScene', { cameFromMenu: false }), { enabled: true });
+    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 75, 'Lestvica', () => {
+      this.saveWorkspaceState();
+      this.scene.start('ScoreboardScene', { cameFromMenu: false });
+    }, { enabled: true });
     this.checkButton = makeButton(
       this,
       0x3399ff,
@@ -208,6 +211,7 @@ export default class WorkspaceScene extends Phaser.Scene {
       .on('pointerover', () => backButton.setStyle({ color: '#0054fdff' }))
       .on('pointerout', () => backButton.setStyle({ color: '#387affff' }))
       .on('pointerdown', () => {
+        this.saveWorkspaceState();
         this.cameras.main.fade(300, 0, 0, 0);
         this.time.delayedCall(300, () => {
           this.scene.start('LabScene');
@@ -233,6 +237,8 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.selectionEnd = { x: 0, y: 0 };
     this.selectedComponents = [];
     this.groupDragOffsets = new Map();
+
+    this.restoreWorkspaceState();
 
     /*
     const scoreButton = this.add.text(this.scale.width / 1.1, 25, 'Lestvica', {
@@ -405,6 +411,53 @@ export default class WorkspaceScene extends Phaser.Scene {
     const minCeiled = Math.ceil(min);
     const maxFloored = Math.floor(max);
     return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled);
+  }
+
+  saveWorkspaceState() {
+    const state = this.placedComponents
+      .filter(comp => !comp.getData('isInPanel'))
+      .map(comp => ({
+        type: comp.getData('type'),
+        color: comp.getData('color'),
+        x: comp.x,
+        y: comp.y,
+        rotation: comp.getData('rotation') || 0
+      }));
+
+    localStorage.setItem('workspaceState', JSON.stringify(state));
+  }
+
+  restoreWorkspaceState() {
+    const raw = localStorage.getItem('workspaceState');
+    if (!raw) return;
+
+    let state;
+    try {
+      state = JSON.parse(raw);
+    } catch {
+      return;
+    }
+
+    if (!Array.isArray(state)) return;
+
+    console.log("Restoring workspace state:", state);
+    console.log("\nAFTER\n");
+
+    state.forEach(data => {
+      console.log("Restoring component:", data);
+      const comp = this.createComponent(data.x, data.y, data.type, data.color);
+
+      comp.setData('isInPanel', false);
+      this.placedComponents.push(comp);
+
+      const rot = data.rotation || 0;
+      if (rot) {
+        comp.setData('rotation', rot);
+        comp.angle = rot;
+      }
+
+      this.updateLogicNodePositions(comp);
+    });
   }
 
   updateLogicNodePositions(component) {
@@ -812,6 +865,8 @@ export default class WorkspaceScene extends Phaser.Scene {
     component.on('pointerout', () => {
       component.setScale(1);
     });
+
+    return component;
   }
 
   checkCircuit() {
