@@ -707,22 +707,7 @@ export default class WorkspaceScene extends Phaser.Scene {
       component.setData('isDragging', true);
       this.specialDescWindow.hide();
 
-      if (this.selectedComponents && this.selectedComponents.includes(component) && this.selectedComponents.length > 1) {
-        const centerX = pointer.x;
-        const centerY = pointer.y;
-
-        this.selectedComponents.forEach(c => {
-          this.tweens.add({
-            targets: c,
-            x: centerX,
-            y: centerY,
-            duration: 150,
-            ease: 'Cubic.easeOut'
-          });
-        });
-
-        this.groupDragOffsets.clear();
-      } else {
+      if (!(this.selectedComponents && this.selectedComponents.includes(component) && this.selectedComponents.length > 1)) {
         if (this.selectedComponents) {
           this.selectedComponents.forEach(c => c.setAlpha(1));
         }
@@ -732,10 +717,19 @@ export default class WorkspaceScene extends Phaser.Scene {
     });
 
     component.on('drag', (pointer, dragX, dragY) => {
-      if (this.selectedComponents && this.selectedComponents.includes(component) && this.selectedComponents.length > 1) {
+      if (this.selectedComponents && this.selectedComponents.includes(component) && this.selectedComponents.length > 1 && this.originalGroupOffsets) {
+        // aggregate group so that dragged component stays under mouse,
+        // others follow keeping their relative layout to the dragged one
         this.selectedComponents.forEach(c => {
-          c.x = pointer.x;
-          c.y = pointer.y;
+          const rel = this.originalGroupOffsets.get(c);
+          if (rel) {
+            const offsetFromDragged = {
+              dx: rel.dx - this.originalGroupOffsets.get(component).dx,
+              dy: rel.dy - this.originalGroupOffsets.get(component).dy
+            };
+            c.x = pointer.x + offsetFromDragged.dx;
+            c.y = pointer.y + offsetFromDragged.dy;
+          }
         });
       } else {
         component.x = dragX;
@@ -757,15 +751,17 @@ export default class WorkspaceScene extends Phaser.Scene {
           return;
         }
 
-        const snappedCenter = this.snapToGrid(component.x, component.y);
-
         this.selectedComponents.forEach(c => {
           const rel = this.originalGroupOffsets.get(c);
           if (rel) {
+            const targetX = component.x + rel.dx;
+            const targetY = component.y + rel.dy;
+            const snapped = this.snapToGrid(targetX, targetY);
+
             this.tweens.add({
               targets: c,
-              x: snappedCenter.x + rel.dx,
-              y: snappedCenter.y + rel.dy,
+              x: snapped.x,
+              y: snapped.y,
               duration: 150,
               ease: 'Cubic.easeOut',
               onUpdate: () => {
