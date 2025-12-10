@@ -179,6 +179,102 @@ export default class WorkspaceScene extends Phaser.Scene {
       this.showClearConfirm();
     }, { enabled: true });
 
+    if(this.isHighSchool) {
+      const ampOptions = [0.1, 0.5, 1, 2, 5];
+      let currentAmpIndex = ampOptions.indexOf(this.graph.circuitCurrent);
+
+      const dropdownBg = this.add
+        .rectangle(width - 140, 320, 65, 44, 0xf0f0f0, 1)
+        .setOrigin(0.5)
+        .setStrokeStyle(2, 0x3399ff);
+
+      const ampLabel = this.add
+        .text(width - 260, 320, "Tok vezja:", {
+          fontSize: "18px",
+          color: "#333",
+          fontStyle: "bold",
+          align: "right",
+          fontFamily: "Arial",
+        })
+        .setOrigin(0, 0.5);
+
+      let ampDropdownText = this.add
+        .text(width - 140, 320, `${this.graph.circuitCurrent} A`, {
+          fontSize: "20px",
+          color: "#3399ff",
+          fontStyle: "bold",
+          backgroundColor: "#ffffff",
+          padding: { x: 15, y: 8 },
+          fontFamily: "Arial",
+        })
+        .setOrigin(0.5);
+
+      let ampDropdownMenu = null;
+
+      const showAmpDropdown = () => {
+        if (ampDropdownMenu) {
+          ampDropdownMenu.destroy();
+          ampDropdownMenu = null;
+          return;
+        }
+        ampDropdownMenu = this.add.container();
+        const menuBg = this.add
+          .rectangle(
+            width - 140,
+            360,
+            65,
+            ampOptions.length * 36 + 8,
+            0xffffff,
+            1
+          )
+          .setOrigin(0.5)
+          .setStrokeStyle(2, 0x3399ff)
+          .setDepth(1001);
+
+        ampDropdownMenu.add(menuBg);
+        ampOptions.forEach((val, idx) => {
+          const opt = this.add
+            .text(
+              width - 140,
+              (360 - ampOptions.length * 15) + idx * 36,
+              `${val} A`,
+              {
+                fontSize: "18px",
+                color: "#333",
+                backgroundColor: idx === currentAmpIndex ? "#e1e9ff" : "#fff",
+                padding: { x: 10, y: 6 },
+                fontFamily: "Arial",
+              }
+            )
+            .setOrigin(0.5)
+            .setInteractive({ useHandCursor: true })
+            .on("pointerover", () =>
+              opt.setStyle({ backgroundColor: "#cce6ff" })
+            )
+            .on("pointerout", () =>
+              opt.setStyle({
+                backgroundColor: idx === currentAmpIndex ? "#e1e9ff" : "#fff",
+              })
+            )
+            .on("pointerdown", () => {
+              this.graph.circuitCurrent = val;
+              ampDropdownText.setText(`${val} A`);
+              currentAmpIndex = idx;
+              if (ampDropdownMenu) {
+                ampDropdownMenu.destroy();
+                ampDropdownMenu = null;
+              }
+            });
+          ampDropdownMenu.add(opt);
+        });
+        ampDropdownMenu.setDepth(1001);
+      };
+
+      ampDropdownText
+        .setInteractive({ useHandCursor: true })
+        .on("pointerdown", showAmpDropdown);
+  }
+
     // stranska vrstica na levi
     this.add.rectangle(0, 0, panelWidth, height, 0xc0c0c0).setOrigin(0);
     this.add.rectangle(0, 0, panelWidth, height, 0x000000, 0.2).setOrigin(0);

@@ -7,6 +7,7 @@ class CircuitGraph {
     this.junctionNodes = new Set();
     this.circuitVoltage = 0;
     this.circuitResistance = 0;
+    this.circuitCurrent = 1;
   }
 
     addNode(node) {
@@ -251,7 +252,7 @@ class CircuitGraph {
           this.circuitResistance += r.ohm;
         }
 
-        this.circuitVoltage -= this.circuitResistance * 1; // We can add setting the amps for the system later
+        this.circuitVoltage -= this.circuitResistance * this.circuitCurrent;
         console.log("Circuit closed! Current flows.");
         const bulbs = this.components.filter((c) => c.type === "bulb");
         console.log(bulbs);
