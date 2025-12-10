@@ -63,14 +63,14 @@ const getActionsForComponent = (scene, component) => {
     case 'bulb':
         actions.unshift(
             new LabeledAction('Spremeni prag', null, createSubmenuActions([
-                new LabeledAction('100 Ω', () => {
-                    switchThresholdComponent(component, 100);
+                new LabeledAction('2 V', () => {
+                    switchThresholdComponent(component, 2);
                 }),
-                new LabeledAction('220 Ω', () => {
-                    switchThresholdComponent(component, 220);
+                new LabeledAction('3 V', () => {
+                    switchThresholdComponent(component, 3);
                 }),
-                new LabeledAction('330 Ω', () => {
-                    switchThresholdComponent(component, 330);
+                new LabeledAction('4 V', () => {
+                    switchThresholdComponent(component, 4);
                 }),
             ]))
         );
