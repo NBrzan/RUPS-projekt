@@ -134,7 +134,8 @@ export default class WorkspaceScene extends Phaser.Scene {
       { enabled: true }
     );
     makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 175, 'Simulacija', () => {
-      this.connected = this.graph.simulate()
+      this.connected = this.graph.simulate(this.isHighSchool);
+
       if (this.connected == 1) {
         this.checkText.setStyle({ color: '#00aa00' });
         this.checkText.setText('Električni tok je sklenjen');
@@ -150,6 +151,9 @@ export default class WorkspaceScene extends Phaser.Scene {
       }
       else if (this.connected == 0) {
         this.checkText.setText('Električni tok ni sklenjen');
+      }
+      else if (this.connected == -3) {
+        this.checkText.setText('Napetost baterij ni dovolj za prižig svetilk');
       }
       this.sim = false;
     }, { enabled: true });
@@ -525,8 +529,8 @@ export default class WorkspaceScene extends Phaser.Scene {
         id = "bat_" + this.getRandomInt(1000, 9999);
         comp = new Battery(
           id,
-          new Node(id + '_start', -40, 0),
-          new Node(id + '_end', 40, 0),
+          new Node(id + "_start", -40, 0),
+          new Node(id + "_end", 40, 0),
           3.3
         );
         comp.type = 'battery';
@@ -543,8 +547,8 @@ export default class WorkspaceScene extends Phaser.Scene {
         id = "res_" + this.getRandomInt(1000, 9999);
         comp = new Resistor(
           id,
-          new Node(id + '_start', -40, 0),
-          new Node(id + '_end', 40, 0),
+          new Node(id + "_start", -40, 0),
+          new Node(id + "_end", 40, 0),
           1.5
         )
         comp.type = 'resistor';
@@ -561,14 +565,14 @@ export default class WorkspaceScene extends Phaser.Scene {
         id = "bulb_" + this.getRandomInt(1000, 9999);
         comp = new Bulb(
           id,
-          new Node(id + '_start', -40, 0),
-          new Node(id + '_end', 40, 0)
+          new Node(id + "_start", -40, 0),
+          new Node(id + "_end", 40, 0),
+          2.0,
+          6.0
         );
         comp.type = 'bulb';
         comp.localStart = { x: -40, y: 0 };
         comp.localEnd = { x: 40, y: 0 };
-        comp.treshold = 2.0;
-        comp.maxVoltage = 6.0;
         componentImage = this.add.image(0, 0, 'svetilka')
           .setOrigin(0.5)
           .setDisplaySize(100, 100);
@@ -616,8 +620,8 @@ export default class WorkspaceScene extends Phaser.Scene {
         id = "wire_" + this.getRandomInt(1000, 9999);
         comp = new Wire(
           id,
-          new Node(id + '_start', -40, 0),
-          new Node(id + '_end', 40, 0)
+          new Node(id + "_start", -40, 0),
+          new Node(id + "_end", 40, 0)
         );
         comp.type = 'wire';
         comp.localStart = { x: -40, y: 0 };
