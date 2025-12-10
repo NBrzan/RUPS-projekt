@@ -68,6 +68,7 @@ const switchResistanceComponent = (component, resistance) => {
 // LAMP
 const switchThresholdComponent = (component, treshold) => {
   let actualComponenet = component.getData("logicComponent");
+  actualComponenet.treshold = treshold;
 }
 
 const switchMaxVoltageComponent = (component, maxVoltage) => {
