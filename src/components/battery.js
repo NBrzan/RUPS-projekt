@@ -7,6 +7,12 @@ class Battery extends Component {
         this.voltage = voltage;
         this.debug_color = 0x00ff00;
     }
+
+    getSpecialPropertiesDescription() {
+        const hasSpecial = true;
+        const description = "Napetost: " + this.voltage + "V";
+        return {hasSpecial, description}
+    }
 }
 
 export { Battery };

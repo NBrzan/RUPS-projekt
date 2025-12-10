@@ -15,6 +15,12 @@ class Component {
     conducts(){
         // Placeholder for component-specific conduction logic
     }
+
+    getSpecialPropertiesDescription() {
+        const hasSpecial = false;
+        const description = "";
+        return {hasSpecial, description}
+    }
 }
 
 export { Component };

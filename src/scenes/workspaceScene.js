@@ -7,6 +7,8 @@ import { CircuitGraph } from '../logic/circuit_graph';
 import { Node } from '../logic/node';
 import { Switch } from '../components/switch';
 import { Resistor } from '../components/resistor';
+import { makeButton } from '../ui/UIButton.js';
+import { MiniWindow } from '../ui/UIMiniWindow.js';
 
 export default class WorkspaceScene extends Phaser.Scene {
   constructor() {
@@ -66,6 +68,9 @@ export default class WorkspaceScene extends Phaser.Scene {
       gridGraphics.strokePath();
     }
 
+    this.specialDescWindow = new MiniWindow(this, 0, 0);
+    this.specialDescMode = false;
+
     this.infoWindow = this.add.container(0, 0);
     this.infoWindow.setDepth(1000);
     this.infoWindow.setVisible(false);
@@ -103,48 +108,34 @@ export default class WorkspaceScene extends Phaser.Scene {
       padding: { x: 15, y: 8 }
     }).setOrigin(0.5);
 
+    this.uiForbiddenZones = [
+      { x: width - 270, y: 40, width: 400, height: 260 },
+      { x: width - 270, y: height - 120, width: 400, height: 140 }
+    ];
+
     const buttonWidth = 180;
     const buttonHeight = 45;
     const cornerRadius = 10;
 
-    const makeButton = (x, y, label, onClick) => {
-      const button = this.add.container(x, y);
+    const panelWidth = 150;
 
-      const bg = this.add.graphics();
-      bg.fillStyle(0x3399ff, 1);
-      bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
-
-      const text = this.add.text(0, 0, label, {
-        fontFamily: 'Arial',
-        fontSize: '20px',
-        color: '#ffffff'
-      }).setOrigin(0.5);
-
-      button.add([bg, text]);
-
-      // make the whole button area interactive
-      button
-        .setSize(buttonWidth, buttonHeight)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerover', () => {
-          bg.clear();
-          bg.fillStyle(0x0f5cad, 1);
-          bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
-        })
-        .on('pointerout', () => {
-          bg.clear();
-          bg.fillStyle(0x3399ff, 1);
-          bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, cornerRadius);
-        })
-        .on('pointerdown', onClick);
-
-      return { button, bg, text };
-    };
-
-    makeButton(width - 140, 75, 'Lestvica', () => this.scene.start('ScoreboardScene', { cameFromMenu: false }));
-    makeButton(width - 140, 125, 'Preveri krog', () => this.checkCircuit());
-    makeButton(width - 140, 175, 'Simulacija', () => {
+    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 75, 'Lestvica', () => {
+      this.saveWorkspaceState();
+      this.scene.start('ScoreboardScene', { cameFromMenu: false });
+    }, { enabled: true });
+    this.checkButton = makeButton(
+      this,
+      0x3399ff,
+      0x0f5cad,
+      width - 140,
+      125,
+      'Preveri krog',
+      () => this.checkCircuit(),
+      { enabled: true }
+    );
+    makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 175, 'Simulacija', () => {
       this.connected = this.graph.simulate(this.isHighSchool);
+
       if (this.connected == 1) {
         this.checkText.setStyle({ color: '#00aa00' });
         this.checkText.setText('Električni tok je sklenjen');
@@ -165,10 +156,21 @@ export default class WorkspaceScene extends Phaser.Scene {
         this.checkText.setText('Napetost baterij ni dovolj za prižig svetilk');
       }
       this.sim = false;
-    });
+    }, { enabled: true });
+    this.detailedViewButton = makeButton(this, 0x3399ff, 0x0f5cad, width - 140, 225, 'Pokaži več', () => {
+      this.specialDescMode = !this.specialDescMode;
+      if (this.specialDescMode) {
+        this.detailedViewButton.setColor(0x00aa00);
+      } else {
+        this.detailedViewButton.setColor(0x3399ff);
+      }
+    }, { enabled: true });
+
+    makeButton(this, 0xc91212, 0xa10d0d, width - 140, height - 80, 'Zbriši vse', () => {
+      this.showClearConfirm();
+    }, { enabled: true });
 
     // stranska vrstica na levi
-    const panelWidth = 150;
     this.add.rectangle(0, 0, panelWidth, height, 0xc0c0c0).setOrigin(0);
     this.add.rectangle(0, 0, panelWidth, height, 0x000000, 0.2).setOrigin(0);
 
@@ -218,6 +220,7 @@ export default class WorkspaceScene extends Phaser.Scene {
       .on('pointerover', () => backButton.setStyle({ color: '#0054fdff' }))
       .on('pointerout', () => backButton.setStyle({ color: '#387affff' }))
       .on('pointerdown', () => {
+        this.saveWorkspaceState();
         this.cameras.main.fade(300, 0, 0, 0);
         this.time.delayedCall(300, () => {
           this.scene.start('LabScene');
@@ -237,38 +240,153 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.placedComponents = [];
     this.gridSize = 40;
 
-    // const scoreButton = this.add.text(this.scale.width / 1.1, 25, 'Lestvica', {
-    //   fontFamily: 'Arial',
-    //   fontSize: '18px',
-    //   color: '#0066ff',
-    //   backgroundColor: '#e1e9ff',
-    //   padding: { x: 20, y: 10 }
-    // })
-    //   .setOrigin(0.5)
-    //   .setInteractive({ useHandCursor: true })
-    //   .on('pointerover', () => scoreButton.setStyle({ color: '#0044cc' }))
-    //   .on('pointerout', () => scoreButton.setStyle({ color: '#0066ff' }))
-    //   .on('pointerdown', () => {
-    //     this.scene.start('ScoreboardScene');
-    //   });
+    this.selectionRect = null;
+    this.isSelectionActive = false;
+    this.selectionStart = { x: 0, y: 0 };
+    this.selectionEnd = { x: 0, y: 0 };
+    this.selectedComponents = [];
+    this.groupDragOffsets = new Map();
 
-    // const simulate = this.add.text(this.scale.width / 1.1, 25, 'Simulacija', {
-    //   fontFamily: 'Arial',
-    //   fontSize: '18px',
-    //   color: '#0066ff',
-    //   backgroundColor: '#e1e9ff',
-    //   padding: { x: 20, y: 10 }
-    // })
-    //   .setOrigin(0.5, -1)
-    //   .setInteractive({ useHandCursor: true })
-    //   .on('pointerover', () => simulate.setStyle({ color: '#0044cc' }))
-    //   .on('pointerout', () => simulate.setStyle({ color: '#0066ff' }))
-    //   .on('pointerdown', () => {
-    //     console.log(this.graph);
-    //     this.graph.simulate();
-    //   });
+    this.restoreWorkspaceState();
 
-    console.log(JSON.parse(localStorage.getItem('users')));
+    /*
+    const scoreButton = this.add.text(this.scale.width / 1.1, 25, 'Lestvica', {
+      fontFamily: 'Arial',
+      fontSize: '18px',
+      color: '#0066ff',
+      backgroundColor: '#e1e9ff',
+      padding: { x: 20, y: 10 }
+    })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerover', () => scoreButton.setStyle({ color: '#0044cc' }))
+      .on('pointerout', () => scoreButton.setStyle({ color: '#0066ff' }))
+      .on('pointerdown', () => {
+        this.scene.start('ScoreboardScene');
+      });
+
+    const simulate = this.add.text(this.scale.width / 1.1, 25, 'Simulacija', {
+      fontFamily: 'Arial',
+      fontSize: '18px',
+      color: '#0066ff',
+      backgroundColor: '#e1e9ff',
+      padding: { x: 20, y: 10 }
+    })
+      .setOrigin(0.5, -1)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerover', () => simulate.setStyle({ color: '#0044cc' }))
+      .on('pointerout', () => simulate.setStyle({ color: '#0066ff' }))
+      .on('pointerdown', () => {
+        console.log(this.graph);
+        this.graph.simulate();
+      });
+    */
+
+    this.input.on('pointerdown', (pointer, currentlyOver) => {
+      if (currentlyOver && currentlyOver.some(obj => obj.getData && obj.getData('type') && !obj.getData('isInPanel'))) {
+        return;
+      }
+
+      if (pointer.leftButtonDown() && pointer.x > panelWidth) {
+        this.isSelectionActive = true;
+        this.selectionStart = { x: pointer.x, y: pointer.y };
+        this.selectionEnd = { x: pointer.x, y: pointer.y };
+
+        if (!this.selectionRect) {
+          this.selectionRect = this.add.rectangle(pointer.x, pointer.y, 1, 1, 0x545454, 0.2)
+            .setStrokeStyle(2, 0x808080)
+            .setOrigin(0);
+          this.selectionRect.setDepth(900);
+        } else {
+          this.selectionRect.setVisible(true);
+        }
+
+        this.selectionRect.x = pointer.x;
+        this.selectionRect.y = pointer.y;
+        this.selectionRect.width = 1;
+        this.selectionRect.height = 1;
+
+        this.selectedComponents.forEach(c => {
+          c.setAlpha(1);
+          const children = c.list || [];
+          children.forEach(child => {
+            if (child.getData && child.getData('isLabelBg')) {
+              child.clear();
+              child.fillStyle(0x000000, 0.53);
+              child.fillRoundedRect(-40, 15, 80, 20, 4);
+            }
+          });
+        });
+        this.selectedComponents = [];
+      }
+    });
+
+    this.input.on('pointermove', (pointer) => {
+      if (!this.isSelectionActive || !this.selectionRect) return;
+
+      this.selectionEnd = { x: pointer.x, y: pointer.y };
+
+      const x = Math.min(this.selectionStart.x, this.selectionEnd.x);
+      const y = Math.min(this.selectionStart.y, this.selectionEnd.y);
+      const w = Math.abs(this.selectionEnd.x - this.selectionStart.x);
+      const h = Math.abs(this.selectionEnd.y - this.selectionStart.y);
+
+      this.selectionRect.x = x;
+      this.selectionRect.y = y;
+      this.selectionRect.width = w;
+      this.selectionRect.height = h;
+    });
+
+    this.input.on('pointerup', (pointer) => {
+      if (!this.isSelectionActive || !this.selectionRect) return;
+
+      this.isSelectionActive = false;
+      this.selectionRect.setVisible(false);
+
+      const x = this.selectionRect.x;
+      const y = this.selectionRect.y;
+      const w = this.selectionRect.width;
+      const h = this.selectionRect.height;
+
+      this.selectedComponents = this.placedComponents.filter(comp => {
+        const cx = comp.x;
+        const cy = comp.y;
+        return cx >= x && cx <= x + w && cy >= y && cy <= y + h;
+      });
+
+      this.selectedComponents.forEach(c => {
+        c.setAlpha(0.7);
+        const children = c.list || [];
+        children.forEach(child => {
+          if (child.getData && child.getData('isLabelBg')) {
+            child.clear();
+            child.fillStyle(0x182235, 0.75);
+            child.fillRoundedRect(-40, 15, 80, 20, 4);
+          }
+        });
+      });
+
+      this.groupDragOffsets.clear();
+      if (this.selectedComponents.length > 0) {
+        const center = this.selectedComponents.reduce((acc, c) => {
+          acc.x += c.x;
+          acc.y += c.y;
+          return acc;
+        }, { x: 0, y: 0 });
+        center.x /= this.selectedComponents.length;
+        center.y /= this.selectedComponents.length;
+
+        this.originalGroupCenter = { x: center.x, y: center.y };
+        this.originalGroupOffsets = new Map();
+
+        this.selectedComponents.forEach(c => {
+          this.originalGroupOffsets.set(c, { dx: c.x - center.x, dy: c.y - center.y });
+        });
+      } else {
+        this.originalGroupCenter = null;
+        this.originalGroupOffsets = null;
+      }
+    });
   }
 
   getComponentDetails(type) {
@@ -292,7 +410,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     // komponeta se postavi na presečišče
     const snappedX = Math.round((x - startX) / gridSize) * gridSize + startX;
     const snappedY = Math.round(y / gridSize) * gridSize;
-
+    
     return { x: snappedX, y: snappedY };
   }
 
@@ -300,6 +418,53 @@ export default class WorkspaceScene extends Phaser.Scene {
     const minCeiled = Math.ceil(min);
     const maxFloored = Math.floor(max);
     return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled);
+  }
+
+  saveWorkspaceState() {
+    const state = this.placedComponents
+      .filter(comp => !comp.getData('isInPanel'))
+      .map(comp => ({
+        type: comp.getData('type'),
+        color: comp.getData('color'),
+        x: comp.x,
+        y: comp.y,
+        rotation: comp.getData('rotation') || 0
+      }));
+
+    localStorage.setItem('workspaceState', JSON.stringify(state));
+  }
+
+  restoreWorkspaceState() {
+    const raw = localStorage.getItem('workspaceState');
+    if (!raw) return;
+
+    let state;
+    try {
+      state = JSON.parse(raw);
+    } catch {
+      return;
+    }
+
+    if (!Array.isArray(state)) return;
+
+    console.log("Restoring workspace state:", state);
+    console.log("\nAFTER\n");
+
+    state.forEach(data => {
+      console.log("Restoring component:", data);
+      const comp = this.createComponent(data.x, data.y, data.type, data.color);
+
+      comp.setData('isInPanel', false);
+      this.placedComponents.push(comp);
+
+      const rot = data.rotation || 0;
+      if (rot) {
+        comp.setData('rotation', rot);
+        comp.angle = rot;
+      }
+
+      this.updateLogicNodePositions(comp);
+    });
   }
 
   updateLogicNodePositions(component) {
@@ -495,6 +660,12 @@ export default class WorkspaceScene extends Phaser.Scene {
         this.infoWindow.x = x + 120;
         this.infoWindow.y = y;
         this.infoWindow.setVisible(true);
+    }else {
+        const details = component.getData("logicComponent").getSpecialPropertiesDescription();
+        const draging = component.setData('isDragging');
+        if (this.specialDescMode && draging && details.hasSpecial)
+        this.specialDescWindow.show(details.description, component.x + 120, component.y);
+
     }
     component.setScale(1.1);
     });
@@ -503,17 +674,23 @@ export default class WorkspaceScene extends Phaser.Scene {
         if (component.getData('isInPanel')) {
             this.infoWindow.setVisible(false);
         }
+        this.specialDescWindow.hide();
+
         component.setScale(1);
     });
 
-    // Label
-    const label = this.add.text(0, 30, type, {
+    // Label background + text
+    const labelBg = this.add.graphics();
+    labelBg.fillStyle(0x000000, 0.53);
+    labelBg.fillRoundedRect(-40, 15, 80, 20, 4);
+    labelBg.setData('isLabelBg', true);
+
+    const label = this.add.text(0, 25, type, {
       fontSize: '11px',
-      color: '#fff',
-      backgroundColor: '#00000088',
-      padding: { x: 4, y: 2 },
+      color: '#ffffff',
     }).setOrigin(0.5);
-    component.add(label);
+
+    component.add([labelBg, label]);
 
     component.setSize(70, 70);
     component.setInteractive({ draggable: true, useHandCursor: true });
@@ -530,24 +707,100 @@ export default class WorkspaceScene extends Phaser.Scene {
 
     this.input.setDraggable(component);
 
-    component.on('dragstart', () => {
+    component.on('dragstart', (pointer) => {
       component.setData('isDragging', true);
+      this.specialDescWindow.hide();
+
+      if (!(this.selectedComponents && this.selectedComponents.includes(component) && this.selectedComponents.length > 1)) {
+        if (this.selectedComponents) {
+          this.selectedComponents.forEach(c => c.setAlpha(1));
+        }
+        this.selectedComponents = [];
+        this.groupDragOffsets.clear();
+      }
     });
 
     component.on('drag', (pointer, dragX, dragY) => {
-      component.x = dragX;
-      component.y = dragY;
+      if (this.selectedComponents && this.selectedComponents.includes(component) && this.selectedComponents.length > 1 && this.originalGroupOffsets) {
+        // aggregate group so that dragged component stays under mouse,
+        // others follow keeping their relative layout to the dragged one
+        this.selectedComponents.forEach(c => {
+          const rel = this.originalGroupOffsets.get(c);
+          if (rel) {
+            const offsetFromDragged = {
+              dx: rel.dx - this.originalGroupOffsets.get(component).dx,
+              dy: rel.dy - this.originalGroupOffsets.get(component).dy
+            };
+            c.x = pointer.x + offsetFromDragged.dx;
+            c.y = pointer.y + offsetFromDragged.dy;
+          }
+        });
+      } else {
+        component.x = dragX;
+        component.y = dragY;
+      }
     });
 
     component.on('dragend', () => {
       const isInPanel = component.x < 200;
 
+      if (this.selectedComponents && this.selectedComponents.length > 1 && this.selectedComponents.includes(component) && this.originalGroupCenter && this.originalGroupOffsets) {
+        if (component.x < 150) {
+          this.selectedComponents.forEach(c => {
+            c.destroy();
+          });
+          this.selectedComponents = [];
+          this.originalGroupCenter = null;
+          this.originalGroupOffsets = null;
+          return;
+        }
+
+        this.selectedComponents.forEach(c => {
+          const rel = this.originalGroupOffsets.get(c);
+          if (rel) {
+            const targetX = component.x + rel.dx;
+            const targetY = component.y + rel.dy;
+            const snapped = this.snapToGrid(targetX, targetY);
+
+            this.tweens.add({
+              targets: c,
+              x: snapped.x,
+              y: snapped.y,
+              duration: 150,
+              ease: 'Cubic.easeOut',
+              onUpdate: () => {
+                this.updateLogicNodePositions(c);
+              },
+              onComplete: () => {
+                this.updateLogicNodePositions(c);
+              }
+            });
+          }
+        });
+      }
+
       if (isInPanel && !component.getData('isInPanel')) {
         // če je ob strani, se odstrani
         component.destroy();
       } else if (!isInPanel && component.getData('isInPanel')) {
-        // s strani na mizo
+        // s strani na mizo – najprej preveri, ali je cilj v prepovedanem UI območju
         const snapped = this.snapToGrid(component.x, component.y);
+
+        const inForbiddenZone = this.uiForbiddenZones && this.uiForbiddenZones.some(zone => {
+          return (
+            snapped.x >= zone.x && snapped.x <= zone.x + zone.width &&
+            snapped.y >= zone.y && snapped.y <= zone.y + zone.height
+          );
+        });
+
+        if (inForbiddenZone) {
+          // če je cilj v UI območju, komponento vrni v panel in ne ustvari nove
+          component.x = component.getData('originalX');
+          component.y = component.getData('originalY');
+          this.updateLogicNodePositions(component);
+          return;
+        }
+
         component.x = snapped.x;
         component.y = snapped.y;
         this.infoWindow.setVisible(false);
@@ -577,10 +830,26 @@ export default class WorkspaceScene extends Phaser.Scene {
         this.placedComponents.push(component);
 
       } else if (!component.getData('isInPanel')) {
-        // na mizi in se postavi na mrežo
+        // na mizi in se postavi na mrežo, razen če je v prepovedanem UI območju
         const snapped = this.snapToGrid(component.x, component.y);
-        component.x = snapped.x;
-        component.y = snapped.y;
+
+        const inForbiddenZone = this.uiForbiddenZones && this.uiForbiddenZones.some(zone => {
+          return (
+            snapped.x >= zone.x && snapped.x <= zone.x + zone.width &&
+            snapped.y >= zone.y && snapped.y <= zone.y + zone.height
+          );
+        });
+
+        if (inForbiddenZone) {
+          // vrni na zadnjo veljavno pozicijo
+          component.x = component.getData('lastValidX') ?? component.getData('originalX');
+          component.y = component.getData('lastValidY') ?? component.getData('originalY');
+        } else {
+          component.x = snapped.x;
+          component.y = snapped.y;
+          component.setData('lastValidX', component.x);
+          component.setData('lastValidY', component.y);
+        }
 
         this.updateLogicNodePositions(component);
 
@@ -600,7 +869,9 @@ export default class WorkspaceScene extends Phaser.Scene {
  
     component.on('pointerup', (pointer) => {
 
-      if (!component.getData('isInPanel') && (pointer.getDuration() < 200)) {
+      const manySelected = this.selectedComponents && this.selectedComponents.length > 1;
+
+      if (!component.getData('isInPanel') && (pointer.getDuration() < 200) && !manySelected) {
 
         const currentRotation = component.getData('rotation');
         const newRotation = (currentRotation + 90) % 360;
@@ -629,6 +900,8 @@ export default class WorkspaceScene extends Phaser.Scene {
     component.on('pointerout', () => {
       component.setScale(1);
     });
+
+    return component;
   }
 
   checkCircuit() {
@@ -659,6 +932,9 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.checkText.setStyle({ color: '#00aa00' });
     this.checkText.setText('Čestitke! Krog je pravilen.');
     this.addPoints(10);
+    if (this.checkButton && this.checkButton.disable) {
+      this.checkButton.disable();
+    }
 
     if (currentChallenge.theory) {
       this.showTheory(currentChallenge.theory);
@@ -669,18 +945,27 @@ export default class WorkspaceScene extends Phaser.Scene {
       this.addPoints(10);
       this.time.delayedCall(2000, () => this.nextChallenge());
     }
-    // this.placedComponents.forEach(comp => comp.destroy());
-    // this.placedComponents = [];
-    // this.time.delayedCall(2000, () => this.nextChallenge());
-    // const isCorrect = currentChallenge.requiredComponents.every(req => placedTypes.includes(req));
-    // if (isCorrect) {
-    //   this.checkText.setText('Čestitke! Krog je pravilen.');
-    //   this.addPoints(10);
-    //   this.time.delayedCall(2000, () => this.nextChallenge());
-    // }
-    // else {
-    //   this.checkText.setText('Krog ni pravilen. Poskusi znova.');
-    // }
+    /*
+    this.placedComponents.forEach(comp => comp.destroy());
+    this.placedComponents = [];
+    this.time.delayedCall(2000, () => this.nextChallenge());
+    const isCorrect = currentChallenge.requiredComponents.every(req => placedTypes.includes(req));
+    if (isCorrect) {
+      this.checkText.setText('Čestitke! Krog je pravilen.');
+      this.addPoints(10);
+      this.time.delayedCall(2000, () => this.nextChallenge());
+    }
+    else {
+      this.checkText.setText('Krog ni pravilen. Poskusi znova.');
+    }
+    */
+  }
+
+  clearWorkspace() {
+    this.placedComponents.forEach(comp => comp.destroy());
+    this.placedComponents = [];
+    this.graph = new CircuitGraph();
+    this.checkText.setText('');
   }
 
   nextChallenge() {
@@ -724,6 +1009,71 @@ export default class WorkspaceScene extends Phaser.Scene {
     localStorage.setItem('users', JSON.stringify(users));
   }
 
+  showClearConfirm() {
+    const { width, height } = this.cameras.main;
+
+    // background overlay
+    const overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.5)
+      .setOrigin(0)
+      .setDepth(1000);
+
+    const dialogWidth = Math.min(400, width - 80);
+    const dialogHeight = 180;
+
+    const dialogBg = this.add.rectangle(width / 2, height / 2, dialogWidth, dialogHeight, 0xffffff, 1)
+      .setStrokeStyle(2, 0x333333)
+      .setDepth(1001);
+
+    const message = this.add.text(width / 2, height / 2 - 30, 'Ali si siguren?', {
+      fontSize: '22px',
+      color: '#000000',
+      fontStyle: 'bold',
+      align: 'center',
+      wordWrap: { width: dialogWidth - 40 }
+    }).setOrigin(0.5).setDepth(1002);
+
+    const closeDialog = () => {
+      overlay.destroy();
+      dialogBg.destroy();
+      message.destroy();
+      yesBtn.destroy();
+      noBtn.destroy();
+    };
+
+    // "Prekini" button
+    const noBtn = this.add.text(width / 2 - 60, height / 2 + 40, 'Prekliči', {
+      fontSize: '20px',
+      color: '#ffffff',
+      backgroundColor: '#dc3545',
+      padding: { x: 20, y: 8 }
+    })
+      .setOrigin(0.5)
+      .setDepth(1002)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerover', () => noBtn.setStyle({ backgroundColor: '#c82333' }))
+      .on('pointerout', () => noBtn.setStyle({ backgroundColor: '#dc3545' }))
+      .on('pointerdown', () => {
+        closeDialog();
+      });
+
+    // "Da" button
+    const yesBtn = this.add.text(width / 2 + 60, height / 2 + 40, 'Da', {
+      fontSize: '20px',
+      color: '#ffffff',
+      backgroundColor: '#28a745',
+      padding: { x: 20, y: 8 }
+    })
+      .setOrigin(0.5)
+      .setDepth(1002)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerover', () => yesBtn.setStyle({ backgroundColor: '#218838' }))
+      .on('pointerout', () => yesBtn.setStyle({ backgroundColor: '#28a745' }))
+      .on('pointerdown', () => {
+        this.clearWorkspace();
+        closeDialog();
+      });
+  }
+
   showTheory(theoryText) {
     const { width, height } = this.cameras.main;
 
@@ -757,6 +1107,10 @@ export default class WorkspaceScene extends Phaser.Scene {
         this.placedComponents.forEach(comp => comp.destroy());
         this.placedComponents = [];
         this.nextChallenge();
+
+        if (this.checkButton && this.checkButton.disable) {
+          this.checkButton.enable();
+        }
       });
 
 
