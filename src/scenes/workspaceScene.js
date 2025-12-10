@@ -9,6 +9,10 @@ import { Switch } from '../components/switch';
 import { Resistor } from '../components/resistor';
 import { makeButton } from '../ui/UIButton.js';
 import { MiniWindow } from '../ui/UIMiniWindow.js';
+import { makeDropDown } from '../ui/UIDropDown.js';
+import { LabeledAction } from '../ui/LabeledAction.js';
+import { closeDropdown, deleteComponent, rotateComponent, closeSubDropdown } from '../components/actions/dropDownOptions.js';
+import { getActionsForComponent } from '../components/actions/actionsComponent.js';
 
 export default class WorkspaceScene extends Phaser.Scene {
   constructor() {
@@ -74,7 +78,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.infoWindow = this.add.container(0, 0);
     this.infoWindow.setDepth(1000);
     this.infoWindow.setVisible(false);
-    
+
     // ozadje info okna
     const infoBox = this.add.rectangle(0, 0, 200, 80, 0x2c2c2c, 0.95);
     infoBox.setStrokeStyle(2, 0xffffff);
@@ -84,9 +88,14 @@ export default class WorkspaceScene extends Phaser.Scene {
         align: 'left',
         wordWrap: { width: 180 }
     }).setOrigin(0.5);
-    
+
     this.infoWindow.add([infoBox, infoText]);
     this.infoText = infoText;
+
+    this.input.mouse.disableContextMenu();
+    this.input.on('pointerdown', this.handleGlobalPointerDown, this);
+    this.currentDropDown = null;
+    this.currentSubDropDown = null;
 
     this.promptText = this.add.text(
       width / 1.8,
@@ -188,26 +197,25 @@ export default class WorkspaceScene extends Phaser.Scene {
 
     trashCan.on('pointerover', () => {
         this.infoText.setText("Tukaj vrži komponente, ki jih ne želiš");
-        
+
         this.infoWindow.x = trashCanX + 120;
         this.infoWindow.y = trashCanY;
         this.infoWindow.setVisible(true);
     });
-    
+
     trashCan.on('pointerout', () => {
         this.infoWindow.setVisible(false);
     });
-    
-    
+
+
     // komponente v stranski vrstici
     this.createComponent(panelWidth / 2, 100, 'baterija', 0xffcc00);
     this.createComponent(panelWidth / 2, 180, 'upor', 0xff6600);
     this.createComponent(panelWidth / 2, 260, 'svetilka', 0xff0000);
     this.createComponent(panelWidth / 2, 340, 'stikalo-on', 0x666666);
-    this.createComponent(panelWidth / 2, 420, 'stikalo-off', 0x666666);
-    this.createComponent(panelWidth / 2, 500, 'žica', 0x0066cc);
-    this.createComponent(panelWidth / 2, 580, 'ampermeter', 0x00cc66);
-    this.createComponent(panelWidth / 2, 660, 'voltmeter', 0x00cc66);
+    this.createComponent(panelWidth / 2, 420, 'žica', 0x0066cc);
+    this.createComponent(panelWidth / 2, 500, 'ampermeter', 0x00cc66);
+    this.createComponent(panelWidth / 2, 580, 'voltmeter', 0x00cc66);
 
     const backButton = this.add.text(12, 10, '↩ Nazaj', {
       fontFamily: 'Arial',
@@ -598,24 +606,6 @@ export default class WorkspaceScene extends Phaser.Scene {
         component.setData('logicComponent', comp)
         break;
 
-      case 'stikalo-off':
-        id = "switch_" + this.getRandomInt(1000, 9999);
-        comp = new Switch(
-          id,
-          new Node(id + "_start", -40, 0),
-          new Node(id + "_end", 40, 0),
-          false
-        )
-        comp.type = 'switch';
-        comp.localStart = { x: -40, y: 0 };
-        comp.localEnd = { x: 40, y: 0 };
-        componentImage = this.add.image(0, 0, 'stikalo-off')
-          .setOrigin(0.5)
-          .setDisplaySize(100, 100);
-        component.add(componentImage);
-        component.setData('logicComponent', comp)
-        break;
-
       case 'žica':
         id = "wire_" + this.getRandomInt(1000, 9999);
         comp = new Wire(
@@ -655,7 +645,7 @@ export default class WorkspaceScene extends Phaser.Scene {
         // prikaži info okno
         const details = this.getComponentDetails(type);
         this.infoText.setText(details);
-        
+
         // zraven komponente
         this.infoWindow.x = x + 120;
         this.infoWindow.y = y;
@@ -669,7 +659,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     }
     component.setScale(1.1);
     });
-    
+
     component.on('pointerout', () => {
         if (component.getData('isInPanel')) {
             this.infoWindow.setVisible(false);
@@ -866,30 +856,24 @@ export default class WorkspaceScene extends Phaser.Scene {
         component.setData('isDragging', false);
       });
     });
- 
+
     component.on('pointerup', (pointer) => {
 
       const manySelected = this.selectedComponents && this.selectedComponents.length > 1;
 
-      if (!component.getData('isInPanel') && (pointer.getDuration() < 200) && !manySelected) {
+    if (!component.getData('isInPanel') && (pointer.getDuration() < 200) && !manySelected) {
+    
+      if (pointer.button == 2) {
 
-        const currentRotation = component.getData('rotation');
-        const newRotation = (currentRotation + 90) % 360;
-        //console.log(" Rotation new: " , newRotation)
-        component.setData('rotation', newRotation);
-        component.setData('isRotated', !component.getData('isRotated'));
+        this.currentDropDown = makeDropDown(this, pointer.worldX, pointer.worldY, getActionsForComponent(this, component), closeSubDropdown);
+        this.currentDropDown.setDepth(1001); // Dropdown always top
+        this.currentDropDown.setVisible(true);
 
-        this.tweens.add({
-          targets: component,
-          angle: "+=90",
-          duration: 150,
-          ease: 'Cubic.easeOut',
-          onComplete: () => {
-            this.updateLogicNodePositions(component);
-          }
-        });
-
+        //console.log("SWITCH is on: ", component.getData("logicComponent").is_on);
+      } else if (pointer.button == 0) {
+        rotateComponent(this, component);
       }
+    }
     });
 
     // hover efekt
@@ -915,7 +899,7 @@ export default class WorkspaceScene extends Phaser.Scene {
       return;
     }
 
-    // je pravilna simulacija 
+    // je pravilna simulacija
     if (this.sim == undefined) {
       this.checkText.setText('Zaženi simlacijo');
       return;
@@ -1128,6 +1112,23 @@ export default class WorkspaceScene extends Phaser.Scene {
     if (this.continueButton) {
       this.continueButton.destroy();
       this.continueButton = null;
+    }
+  }
+
+  handleGlobalPointerDown(pointer) {
+    const drop = this.currentDropDown;
+    if (!drop) return;
+
+    const x = pointer.worldX;
+    const y = pointer.worldY;
+    console.log('Exists sub: ', this.currentSubDropDown);
+
+    const insideMain = drop.getBounds().contains(x, y);
+    const insideSub = this.currentSubDropDown?.getBounds().contains(x, y) ?? false;
+
+    if (!insideMain && !insideSub) {
+      closeDropdown(this);
+
     }
   }
 
