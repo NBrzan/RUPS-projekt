@@ -203,7 +203,7 @@ class CircuitGraph {
     return false;
   }
 
-  simulate() {
+  simulate(isHighSchool = false) {
     // this.junctionNodes = this.detectJunctionNodes();
     // console.log("Junction nodes:", this.junctionNodes);
     // const branches = this.findBranches();
@@ -213,10 +213,13 @@ class CircuitGraph {
       console.log("No battery found.");
       return -1;
     }
-    this.circuitVoltage = 0;
-    batteries.forEach((b) => {
-      this.circuitVoltage += b.voltage;
-    });
+
+    if (isHighSchool) {
+      this.circuitVoltage = 0;
+      batteries.forEach((b) => {
+        this.circuitVoltage += b.voltage;
+      });
+    }
 
     const switches = this.components.filter((c) => c.type === "switche");
     switches.forEach((s) => {
@@ -241,6 +244,7 @@ class CircuitGraph {
     const closed = this.hasClosedLoop(start, end);
 
     if (closed) {
+      if (isHighSchool) {
         this.circuitResistance = 0;
         const resistors = this.components.filter((c) => c.type === "resistor");
         for (const r of resistors) {
@@ -258,7 +262,8 @@ class CircuitGraph {
             return -3;
           }
         }
-        return 1;
+      }
+      return 1;
     } else {
       console.log("Circuit open. No current flows.");
       const bulbs = this.components.filter((c) => c.type === "bulb");

@@ -144,7 +144,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     makeButton(width - 140, 75, 'Lestvica', () => this.scene.start('ScoreboardScene', { cameFromMenu: false }));
     makeButton(width - 140, 125, 'Preveri krog', () => this.checkCircuit());
     makeButton(width - 140, 175, 'Simulacija', () => {
-      this.connected = this.graph.simulate()
+      this.connected = this.graph.simulate(this.isHighSchool);
       if (this.connected == 1) {
         this.checkText.setStyle({ color: '#00aa00' });
         this.checkText.setText('Električni tok je sklenjen');
