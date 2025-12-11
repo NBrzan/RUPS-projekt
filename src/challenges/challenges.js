@@ -58,7 +58,7 @@ export const highSchoolChallenges = [
   },
     {
       prompt: 'Sestavi krog z dvema baterijama. Ena baterija naj ima napetost 3.3V, druga pa 5V.',
-      requiredComponents: ['baterija', 'baterija', 'upor', 'upor', 'svetilka', 'žica'],
+      requiredComponents: ['baterija', 'baterija', 'upor', 'svetilka'],
       theory: ['Več baterij pomeni večjo napetost, več uporov pa večjo skupno upornost. Skupna napetost je 8.3V.'],
       checkFn: (scene) => {
         const batteries = scene.placedComponents.filter(c => c.getData('type') === 'baterija');
