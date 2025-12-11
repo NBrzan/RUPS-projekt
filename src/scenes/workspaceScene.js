@@ -524,7 +524,16 @@ export default class WorkspaceScene extends Phaser.Scene {
     return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled);
   }
 
+  removeFromPlacedComponents(component) {
+    if (!this.placedComponents) return;
+    const index = this.placedComponents.indexOf(component);
+    if (index !== -1) {
+      this.placedComponents.splice(index, 1);
+    }
+  }
+
   saveWorkspaceState() {
+    const key = this.isHighSchool ? 'workspaceStateHighSchool' : 'workspaceStateElementary';
     const state = this.placedComponents
       .filter(comp => !comp.getData('isInPanel'))
       .map(comp => ({
@@ -535,11 +544,14 @@ export default class WorkspaceScene extends Phaser.Scene {
         rotation: comp.getData('rotation') || 0
       }));
 
-    localStorage.setItem('workspaceState', JSON.stringify(state));
+
+      console.log("Saving workspace state:", state);
+    localStorage.setItem(key, JSON.stringify(state));
   }
 
   restoreWorkspaceState() {
-    const raw = localStorage.getItem('workspaceState');
+    const key = this.isHighSchool ? 'workspaceStateHighSchool' : 'workspaceStateElementary';
+    const raw = localStorage.getItem(key);
     if (!raw) return;
 
     let state;
@@ -833,6 +845,7 @@ export default class WorkspaceScene extends Phaser.Scene {
       if (this.selectedComponents && this.selectedComponents.length > 1 && this.selectedComponents.includes(component) && this.originalGroupCenter && this.originalGroupOffsets) {
         if (component.x < 150) {
           this.selectedComponents.forEach(c => {
+            this.removeFromPlacedComponents(c);
             c.destroy();
           });
           this.selectedComponents = [];
@@ -867,6 +880,7 @@ export default class WorkspaceScene extends Phaser.Scene {
 
       if (isInPanel && !component.getData('isInPanel')) {
         // če je ob strani, se odstrani
+        this.removeFromPlacedComponents(component);
         component.destroy();
       } else if (!isInPanel && component.getData('isInPanel')) {
         // s strani na mizo – najprej preveri, ali je cilj v prepovedanem UI območju

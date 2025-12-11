@@ -3,6 +3,14 @@ const deleteComponent = (scene, component) => {
     scene.currentDropDown.destroy();
     scene.currentDropDown = null;
   }
+  if (scene.removeFromPlacedComponents) {
+    scene.removeFromPlacedComponents(component);
+  } else if (scene.placedComponents) {
+    const index = scene.placedComponents.indexOf(component);
+    if (index !== -1) {
+      scene.placedComponents.splice(index, 1);
+    }
+  }
   component.destroy();
 };
 
