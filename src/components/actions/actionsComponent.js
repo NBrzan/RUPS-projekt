@@ -48,14 +48,23 @@ const getActionsForComponent = (scene, component) => {
     case 'resistor':
       actions.unshift(
         new LabeledAction('Spremeni upor', null, createSubmenuActions([
+          new LabeledAction('1.5 Ω', () => {
+            switchResistanceComponent(component, 1.5);
+          }),
+          new LabeledAction('2.3 Ω', () => {
+            switchResistanceComponent(component, 2);
+          }),
+          new LabeledAction('5 Ω', () => {
+            switchResistanceComponent(component, 5);
+          }),
+          new LabeledAction('10 Ω', () => {
+            switchResistanceComponent(component, 10);
+          }),
           new LabeledAction('33 Ω', () => {
             switchResistanceComponent(component, 33);
           }),
-          new LabeledAction('47 Ω', () => {
-            switchResistanceComponent(component, 47);
-          }),
-          new LabeledAction('68 Ω', () => {
-            switchResistanceComponent(component, 68);
+          new LabeledAction('40 Ω', () => {
+            switchResistanceComponent(component, 40);
           }),
         ]))
       );

@@ -1009,6 +1009,11 @@ export default class WorkspaceScene extends Phaser.Scene {
       return;
     }
 
+    if (currentChallenge.checkFn && !currentChallenge.checkFn(this)) {
+        this.checkText.setText('Krog ni pravilen. Preveri vrednosti komponent.');
+        return;
+    }
+
     // je pravilna simulacija
     if (this.sim == undefined) {
       this.checkText.setText('Zaženi simlacijo');
