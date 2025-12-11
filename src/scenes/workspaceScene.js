@@ -310,8 +310,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.createComponent(panelWidth / 2, 260, 'svetilka', 0xff0000);
     this.createComponent(panelWidth / 2, 340, 'stikalo-on', 0x666666);
     this.createComponent(panelWidth / 2, 420, 'žica', 0x0066cc);
-    this.createComponent(panelWidth / 2, 500, 'ampermeter', 0x00cc66);
-    this.createComponent(panelWidth / 2, 580, 'voltmeter', 0x00cc66);
+
 
     const backButton = this.add.text(12, 10, '↩ Nazaj', {
       fontFamily: 'Arial',
