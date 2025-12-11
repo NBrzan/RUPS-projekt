@@ -55,9 +55,12 @@ export default class WorkspaceScene extends Phaser.Scene {
     const { width, height } = this.cameras.main;
 
     // površje mize
-    const desk = this.add.rectangle(0, 0, width, height, 0xe0c9a6).setOrigin(0);
+    const deskColor = this.isHighSchool ? 0x2D4F8C : 0xe0c9a6;
+    const desk = this.add.rectangle(0, 0, width, height, deskColor).setOrigin(0);
     const gridGraphics = this.add.graphics();
-    gridGraphics.lineStyle(1, 0x8b7355, 0.35);
+    const gridColor = this.isHighSchool ? 0xdedede : 0x8b7355;
+    const gridAlpha = this.isHighSchool ? 0.6 : 0.35;
+    gridGraphics.lineStyle(1, gridColor, gridAlpha);
     const gridSize = 40;
     for (let x = 0; x < width; x += gridSize) {
       gridGraphics.beginPath();
@@ -191,7 +194,7 @@ export default class WorkspaceScene extends Phaser.Scene {
       const ampLabel = this.add
         .text(width - 260, 320, "Tok vezja:", {
           fontSize: "18px",
-          color: "#333",
+          color: "#ebebebff",
           fontStyle: "bold",
           align: "right",
           fontFamily: "Arial",

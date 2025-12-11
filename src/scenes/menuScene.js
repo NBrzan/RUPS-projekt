@@ -54,8 +54,9 @@ export default class MenuScene extends Phaser.Scene {
         this.add.rectangle(rectX - gapWidth / 2 - halfBottomWidth / 2, bottomWireY, halfBottomWidth, wireThickness, wireColor);
         this.add.rectangle(rectX + gapWidth / 2 + halfBottomWidth / 2, bottomWireY, halfBottomWidth, wireThickness, wireColor);
 
-        // stikalo
-        const switchOffsetY = -18.5;
+        // stikalo (malo nižje)
+        const switchOffsetY = -0.4;
+        const switchOffsetYOn = -0.4;
         this.switchButton = this.add.image(rectX, bottomWireY + switchOffsetY, 'switch-off')
             .setScale(0.7)
             .setOrigin(0.5)
@@ -154,7 +155,6 @@ export default class MenuScene extends Phaser.Scene {
 
         if (this.isSwitchOn) {
             this.switchButton.setTexture('switch-on');
-            this.switchButton.y += 14;
 
             // bel napis
             this.title.setStyle({
@@ -174,7 +174,6 @@ export default class MenuScene extends Phaser.Scene {
 
         } else {
             this.switchButton.setTexture('switch-off');
-            this.switchButton.y -= 14;
             this.title.setStyle({
                 color: '#222222',
                 shadow: { offsetX: 0, offsetY: 0, color: '#00000000', blur: 0, fill: false }
