@@ -55,11 +55,11 @@ export default class WorkspaceScene extends Phaser.Scene {
     const { width, height } = this.cameras.main;
 
     // površje mize
-    const deskColor = this.isHighSchool ? 0x2D4F8C : 0xe0c9a6;
+    const deskColor = this.isHighSchool ? 0xB6C9F2 : 0xe0c9a6;
     const desk = this.add.rectangle(0, 0, width, height, deskColor).setOrigin(0);
     const gridGraphics = this.add.graphics();
     const gridColor = this.isHighSchool ? 0xdedede : 0x8b7355;
-    const gridAlpha = this.isHighSchool ? 0.6 : 0.35;
+    const gridAlpha = 0.6;
     gridGraphics.lineStyle(1, gridColor, gridAlpha);
     const gridSize = 40;
     for (let x = 0; x < width; x += gridSize) {
