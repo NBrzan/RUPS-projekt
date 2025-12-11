@@ -1,5 +1,5 @@
 const margin = 10;
-const paddingHorizontal = 5;
+const paddingHorizontal = 15;
 const paddingVertical = 5;
 const color = 'grey';
 
@@ -35,6 +35,9 @@ const makeDropDown = (scene, x, y, labeledActions, closeSubDropdownCallback) => 
 
         text.on('pointerover', () => text.setColor('#ddddddff'));
         text.on('pointerout', () => text.setColor('#ffffff'));
+        text.on('pointerdown', () => text.setColor('#818181ff'));
+        text.on('pointerup', () => text.setColor('#ddddff'));
+
 
         menu.add(text);
 
