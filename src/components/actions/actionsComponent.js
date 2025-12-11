@@ -6,13 +6,13 @@ const getActionsForComponent = (scene, component) => {
   const type = logicComp ? logicComp.type : 'unknown';
 
   const actions = [
-    new LabeledAction('Delete', () => {
+    new LabeledAction('Izbriši', () => {
       deleteComponent(scene, component);
     }),
-    new LabeledAction('Rotate', () => {
+    new LabeledAction('Rotiraj', () => {
       rotateComponent(scene, component);
     }),
-    new LabeledAction('Close', () => {
+    new LabeledAction('Zapri', () => {
       closeDropdown(scene)
     })
   ];
@@ -20,7 +20,7 @@ const getActionsForComponent = (scene, component) => {
   const createSubmenuActions = (baseActions) => {
     return [
       ...baseActions,
-      new LabeledAction('Close', () => {
+      new LabeledAction('Zapri', () => {
         closeSubDropdown(scene);
       })
     ];
@@ -29,7 +29,7 @@ const getActionsForComponent = (scene, component) => {
   switch (logicComp.type) {
     case 'switch':
       actions.unshift(
-        new LabeledAction('Toggle', () => {
+        new LabeledAction('Preklopi', () => {
           toggleComponent(scene, component)
         }));
       break;
