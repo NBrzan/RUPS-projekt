@@ -37,11 +37,11 @@ export const elementaryChallenges = [
 ];
 
 export const highSchoolChallenges = [
-  //{
-  //  prompt: 'Sestavi električni krog z dvema uporoma in izračunaj skupno upornost.',
-  //  requiredComponents: ['baterija', 'upor', 'upor', 'žica'],
-  //  theory: ['Upora sta vezana zaporedno. Skupna upornost je vsota posameznih uporov: R_total = R1 + R2.']
-  //},
+  {
+    prompt: 'Sestavi električni krog z dvema uporoma in izračunaj skupno upornost.',
+    requiredComponents: ['baterija', 'upor', 'upor', 'žica'],
+    theory: ['Upora sta vezana zaporedno. Skupna upornost je vsota posameznih uporov: R_total = R1 + R2.']
+  },
   {
     prompt: 'Sestavi električni krog z 5V baterijo.',
     requiredComponents: ['baterija', 'upor', 'svetilka', 'žica'],
