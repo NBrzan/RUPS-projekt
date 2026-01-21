@@ -53,6 +53,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     }
 
     const { width, height } = this.cameras.main;
+    const isSmallScreen = width < 1200;
 
     // površje mize
     const deskColor = this.isHighSchool ? 0xB6C9F2 : 0xe0c9a6;
@@ -101,11 +102,11 @@ export default class WorkspaceScene extends Phaser.Scene {
     this.currentSubDropDown = null;
 
     this.promptText = this.add.text(
-      width / 1.8,
+      width / 2,
       height - 30,
       this.challenges[this.currentChallengeIndex].prompt,
       {
-        fontSize: '20px',
+        fontSize: (isSmallScreen ? '17px': '20px'),
         color: '#333',
         fontStyle: 'bold',
         backgroundColor: '#ffffff88',
@@ -333,8 +334,8 @@ export default class WorkspaceScene extends Phaser.Scene {
         });
       });
 
-    this.add.text(width / 2 + 50, 30, 'Povleci komponente na mizo in zgradi svoj električni krog!', {
-      fontSize: '20px',
+    this.add.text(width / 2, 30, 'Povleci komponente na mizo in zgradi svoj električni krog!', {
+      fontSize: (isSmallScreen ? '17px' : '20px'),
       color: '#333',
       fontStyle: 'bold',
       align: 'center',
@@ -516,7 +517,7 @@ export default class WorkspaceScene extends Phaser.Scene {
     // komponeta se postavi na presečišče
     const snappedX = Math.round((x - startX) / gridSize) * gridSize + startX;
     const snappedY = Math.round(y / gridSize) * gridSize;
-    
+
     return { x: snappedX, y: snappedY };
   }
 
@@ -974,7 +975,7 @@ export default class WorkspaceScene extends Phaser.Scene {
       const manySelected = this.selectedComponents && this.selectedComponents.length > 1;
 
     if (!component.getData('isInPanel') && (pointer.getDuration() < 200) && !manySelected) {
-    
+
       if (pointer.button == 2) {
 
         this.currentDropDown = makeDropDown(this, pointer.worldX, pointer.worldY, getActionsForComponent(this, component), closeSubDropdown);
